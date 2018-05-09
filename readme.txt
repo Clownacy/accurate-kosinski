@@ -4,5 +4,4 @@ kos - main.c kosinski.c
  A compressor for the "Kosinski" format that aims to produce identical output to Sega's own compressor.
 
 decomp - decomp.c
- A tool that parses a Kosinski file, and outputs each match to a text file. Used for comparing the output
- of the kos program with an official Kosinski file.
+ A tool that parses a Kosinski file, and outputs each match to a text file. Used for comparing the output of the kos program with an official Kosinski file.

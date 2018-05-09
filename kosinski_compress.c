@@ -4,7 +4,7 @@
 // Note that Sega's compressor was riddled with errors,
 // search 'Mistake' to find them.
 
-#include "kosinski.h"
+#include "kosinski_compress.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -94,7 +94,9 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
+			#ifndef SHUTUP
 			printf("%X - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			#endif
 
 			const unsigned int match = longest_match_length - 2;
 
@@ -108,7 +110,9 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 		else if (longest_match_length >= 3 && longest_match_length < 10)
 		{
+			#ifndef SHUTUP
 			printf("%X - Full match found: %X, %X, %X\n", ftell(output_file) + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
@@ -120,7 +124,9 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 		else if (longest_match_length >= 3)
 		{
+			#ifndef SHUTUP
 			printf("%X - Extended full match found: %X, %X, %X\n", ftell(output_file) + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
@@ -133,7 +139,9 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 		else
 		{
+			#ifndef SHUTUP
 			printf("%X - Literal match found: %X at %X\n", ftell(output_file) + match_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
+			#endif
 			PutDescriptorBit(true);
 			PutByte(*file_pointer++);
 		}
