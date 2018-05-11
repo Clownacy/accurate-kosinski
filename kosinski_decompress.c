@@ -3,39 +3,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned short descriptor;
+static unsigned short descriptor;
+static int descriptor_bits_remaining;
 
-FILE *file;
-FILE *out_file;
+static FILE *file;
+static FILE *out_file;
 
-unsigned char backsearch_buffer[0x2000];
-size_t backsearch_buffer_index;
+static unsigned char backsearch_buffer[0x2000];
+static size_t backsearch_buffer_index;
 
-bool PopDescriptor(void)
+static bool PopDescriptor(void)
 {
-	static int bits_remaining = 16;
-
 	bool result = descriptor & 1;
 
 	descriptor >>= 1;
 
-	if (--bits_remaining == 0)
+	if (--descriptor_bits_remaining == 0)
 	{
 		fread(&descriptor, 2, 1, file);
-		bits_remaining = 16;
+		descriptor_bits_remaining = 16;
 	}
 
 	return result;
 }
 
-unsigned char GetByte(void)
-{
-	int result = fgetc(file);
-
-	return result;
-}
-
-void WriteBytes(unsigned int distance, unsigned int count)
+static void WriteBytes(unsigned int distance, unsigned int count)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
@@ -52,6 +44,7 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 {	
 	file = p_in_file;
 	out_file = p_out_file;
+	descriptor_bits_remaining = 16;
 
 	unsigned int decomp_pointer = 0;
 	fread(&descriptor, 2, 1, file);
@@ -103,16 +96,19 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 					#endif
 					break;
 				}
-				#ifndef SHUTUP
-				else if (count < 10)
+				else if (count == 2)
 				{
-					printf("%lX - Potential dummy terminator: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+					#ifndef SHUTUP
+					printf("%lX - Dummy terminator: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+					#endif
+					continue;
 				}
 				else
 				{
+					#ifndef SHUTUP
 					printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+					#endif
 				}
-				#endif
 			}
 
 			WriteBytes(distance, count);

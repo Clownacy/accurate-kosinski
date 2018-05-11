@@ -34,7 +34,7 @@ static unsigned char *output_buffer;
 static size_t output_buffer_index;
 
 static unsigned short descriptor;
-static unsigned int descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
+static unsigned int descriptor_bits_remaining;
 
 static void PutByte(unsigned char byte)
 {
@@ -82,6 +82,8 @@ static void PutDescriptorBit(bool bit)
 void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_output_file)
 {
 	output_file = p_output_file;
+	output_buffer_index = 0;
+	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 	unsigned char *file_pointer = file_buffer;
 
