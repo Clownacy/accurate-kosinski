@@ -60,74 +60,87 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 	{
 		if (PopDescriptor())
 		{
-			size_t position = ftell(file);
-			unsigned char byte = GetByte();
+			unsigned char byte = fgetc(file);
+
 			#ifndef SHUTUP
-			printf("%X - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
+			long int position = ftell(file);
+			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
 			#endif
-			++decomp_pointer;
 
 			fputc(byte, out_file);
 			backsearch_buffer[backsearch_buffer_index++ & 0x1FFF] = byte;
+
+			++decomp_pointer;
 		}
 		else if (PopDescriptor())
 		{
-			size_t position = ftell(file);
-			unsigned char byte1 = GetByte();
-			unsigned char byte2 = GetByte();
+			#ifndef SHUTUP
+			long int position = ftell(file);
+			#endif
+
+			unsigned char byte1 = fgetc(file);
+			unsigned char byte2 = fgetc(file);
+
 			short distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
 			unsigned char count = byte2 & 7;
+
 			if (count)
 			{
 				count += 2;
+
 				#ifndef SHUTUP
-				printf("%X - Full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+				printf("%lX - Full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 				#endif
 			}
 			else
 			{
-				count = GetByte() + 1;
+				count = fgetc(file) + 1;
+
 				if (count == 1)
 				{
 					#ifndef SHUTUP
-					printf("%X - Terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
+					printf("%lX - Terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
 					#endif
 					break;
 				}
+				#ifndef SHUTUP
 				else if (count < 10)
 				{
-					#ifndef SHUTUP
-					printf("%X - Potential dummy terminator: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
-					#endif
+					printf("%lX - Potential dummy terminator: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 				}
 				else
 				{
-					#ifndef SHUTUP
-					printf("%X - Extended full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
-					#endif
+					printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 				}
+				#endif
 			}
-			decomp_pointer += count;
 
 			WriteBytes(distance, count);
+
+			decomp_pointer += count;
 		}
 		else
 		{
-			size_t position = ftell(file);
-			int count = 2;
+			#ifndef SHUTUP
+			long int position = ftell(file);
+			#endif
+
+			unsigned int count = 2;
 
 			if (PopDescriptor())
 				count += 2;
 			if (PopDescriptor())
 				count += 1;
 
-			short distance = 0xFF00 | GetByte();
+			short distance = 0xFF00 | fgetc(file);
+
 			#ifndef SHUTUP
-			printf("%X - Inline match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 			#endif
-			decomp_pointer += count;
 
 			WriteBytes(distance, count);
+
+			decomp_pointer += count;
 		}
 	}
 }

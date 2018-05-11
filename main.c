@@ -4,7 +4,7 @@
 
 #include "kosinski_compress.h"
 
-bool LoadFileToBuffer(char *file_name, unsigned char **file_buffer, size_t *file_size)
+bool LoadFileToBuffer(char *file_name, unsigned char **file_buffer, long int *file_size)
 {
 	bool success = false;
 
@@ -47,12 +47,12 @@ int main(int argc, char *argv[])
 		int success = EXIT_FAILURE;
 
 		unsigned char *file_buffer;
-		size_t file_size;
+		long int file_size;
 
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
 			#ifndef SHUTUP
-			printf("File '%s' with size %X loaded\n", argv[1], file_size);
+			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
 			#endif
 			FILE *dst_file = fopen((argc > 2) ? argv[2] : "out.kos", "wb");
 			KosinskiCompress(file_buffer, file_size, dst_file);
