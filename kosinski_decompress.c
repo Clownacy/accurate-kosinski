@@ -53,10 +53,13 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 	{
 		if (PopDescriptor())
 		{
+			#ifndef SHUTUP
+			long int position = ftell(file);
+			#endif
+
 			unsigned char byte = fgetc(file);
 
 			#ifndef SHUTUP
-			long int position = ftell(file);
 			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
 			#endif
 
@@ -99,7 +102,7 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 				else if (count == 2)
 				{
 					#ifndef SHUTUP
-					printf("%lX - Dummy terminator: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+					printf("%lX - Dummy terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
 					#endif
 					continue;
 				}
@@ -117,16 +120,16 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 		}
 		else
 		{
-			#ifndef SHUTUP
-			long int position = ftell(file);
-			#endif
-
 			unsigned int count = 2;
 
 			if (PopDescriptor())
 				count += 2;
 			if (PopDescriptor())
 				count += 1;
+
+			#ifndef SHUTUP
+			long int position = ftell(file);
+			#endif
 
 			short distance = 0xFF00 | fgetc(file);
 

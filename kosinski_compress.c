@@ -12,6 +12,13 @@
 // memory. The graph-theory-based algorithm Flamewing used might not have
 // been feasible on late-80s PCs.
 
+// Unfortunately, there's one bug I can't emulate: it seems the original
+// compressor would accidentally read past the end of the uncompressed
+// file, leading to the final match reading from an odd place in the
+// dictionary. This would be because, instead of searching for 0FAE66,
+// it would search for 0FAE6614 instead. Usually, the match has a 0 added
+// to the end of it, but other times it's a different number entirely.
+
 #include "kosinski_compress.h"
 
 #include <stdbool.h>
