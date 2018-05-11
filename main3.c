@@ -35,8 +35,6 @@ bool LoadFileToBuffer(char *file_name, unsigned char **file_buffer, size_t *file
 
 int main(int argc, char *argv[])
 {
-	int success = EXIT_FAILURE;
-
 	FILE *in_file = fopen(argv[1], "rb");
 	FILE *out_file = fopen("out.unc", "wb");
 
@@ -48,15 +46,11 @@ int main(int argc, char *argv[])
 	unsigned char *file_buffer;
 	size_t file_size;
 
-	if (LoadFileToBuffer("out.unc", &file_buffer, &file_size))
-	{
-		printf("File '%s' with size %X loaded\n", argv[1], file_size);
-		FILE *dst_file = fopen("out.kos", "wb");
-		KosinskiCompress(file_buffer, file_size, dst_file);
-		fclose(dst_file);
-
-		success = EXIT_SUCCESS;
-	}
+	LoadFileToBuffer("out.unc", &file_buffer, &file_size);
+	printf("File '%s' with size %X loaded\n", argv[1], file_size);
+	FILE *dst_file = fopen("out.kos", "wb");
+	KosinskiCompress(file_buffer, file_size, dst_file);
+	fclose(dst_file);
 
 	unsigned char *file_buffer1, *file_buffer2;
 	size_t file_size1, file_size2;
@@ -68,14 +62,12 @@ int main(int argc, char *argv[])
 		printf("File sizes don't match!\n");
 
 	if (memcmp(file_buffer1, file_buffer2, (file_size1 > file_size2) ? file_size2 : file_size1))
-		printf("Shit. The files don't match.\n");
+		printf("The files don't match!\n");
 	else
-		printf("Yay they match.\n");
+		printf("Yay the files match.\n");
 
 	getchar();
 
-//	remove("out.kos");
-//	remove("out.unc");
-
-	return success;
+	remove("out.kos");
+	remove("out.unc");;
 }

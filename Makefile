@@ -1,4 +1,4 @@
-CFLAGS := -O3 -s -static -std=c11 -fomit-frame-pointer -fno-ident
+CFLAGS := -O3 -s -static -std=c11 -fomit-frame-pointer -fno-ident -Wall -Wextra
 
 all: kos.exe decomp.exe compare.exe kosinski_compress.exe
 

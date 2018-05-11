@@ -31,10 +31,10 @@
 static FILE *output_file;
 
 static unsigned char *output_buffer;
-static size_t output_buffer_index = 0;
+static size_t output_buffer_index;
 
 static unsigned short descriptor;
-static unsigned int descriptor_bits_done;
+static unsigned int descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 static void PutByte(unsigned char byte)
 {
@@ -51,6 +51,8 @@ static void PutByte(unsigned char byte)
 
 static void FlushData(void)
 {
+	descriptor >>= descriptor_bits_remaining;
+
 	// Descriptors are stored byte-swapped, so it's possible the
 	// original compressor did this:
 	//fwrite(&descriptor, 2, 1, output_file);
@@ -63,14 +65,16 @@ static void FlushData(void)
 
 static void PutDescriptorBit(bool bit)
 {
-	if (bit)
-		descriptor |= 1 << descriptor_bits_done;
+	descriptor >>= 1;
 
-	if (++descriptor_bits_done == TOTAL_DESCRIPTOR_BITS)
+	if (bit)
+		descriptor |= 1 << (TOTAL_DESCRIPTOR_BITS - 1);
+
+	if (--descriptor_bits_remaining == 0)
 	{
 		FlushData();
 
-		descriptor_bits_done = 0;
+		descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 		output_buffer_index = 0;
 	}
 }
@@ -107,7 +111,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
 			#ifndef SHUTUP
-			printf("%X - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%lX - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int length = longest_match_length - 2;
@@ -123,7 +127,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		else if (longest_match_length >= 3 && longest_match_length < 10)
 		{
 			#ifndef SHUTUP
-			printf("%X - Full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%lX - Full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
@@ -137,7 +141,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		else if (longest_match_length >= 3)
 		{
 			#ifndef SHUTUP
-			printf("%X - Extended full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%lX - Extended full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
@@ -152,7 +156,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		else
 		{
 			#ifndef SHUTUP
-			printf("%X - Literal match found: %X at %X\n", ftell(output_file) + output_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
+			printf("%lX - Literal match found: %X at %X\n", ftell(output_file) + output_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
 			#endif
 			PutDescriptorBit(true);
 			PutByte(*file_pointer++);
@@ -170,6 +174,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 
 	// Mistake 4: There's absolutely no reason to do this
 	// Pad to 0x10
-	for (unsigned int i = 0; i < -ftell(output_file) & 0xF; ++i)
+	size_t bytes_remaining = -ftell(output_file) & 0xF;
+	for (unsigned int i = 0; i < bytes_remaining; ++i)
 		fputc(0, output_file);
 }
