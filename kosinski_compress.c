@@ -86,9 +86,25 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 	unsigned char *file_pointer = file_buffer;
+	unsigned int last_src_file_index = 0;
 
 	while (file_pointer < file_buffer + file_size)
 	{
+		// Mistake 5: This is completely pointless
+		// For some reason, the original compressor would insert dummy matches
+		// before the first match that copies to after 0xA000
+		if (file_pointer - file_buffer >= 0xA000 && last_src_file_index < 0xA000)
+		{
+			// Terminator match
+			PutDescriptorBit(false);
+			PutDescriptorBit(true);
+			PutByte(0x00);
+			PutByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
+			PutByte(0x01);
+		}
+
+		last_src_file_index = file_pointer - file_buffer;
+
 		unsigned int max_match_distance = MIN(file_pointer - file_buffer, MAX_MATCH_DISTANCE);
 
 		unsigned int longest_match_index;
