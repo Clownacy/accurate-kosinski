@@ -1,8 +1,16 @@
-// Clownacy's accurate Kosinski compressor.
+// Copyright (c) 2018 Clownacy
+
+// Sega-accurate Kosinski compressor.
 // Creates identical output to Sega's own compressor.
 
-// Note that Sega's compressor was riddled with errors,
-// search 'Mistake' to find them.
+// Note that Sega's compressor was riddled with errors.
+// Search 'Mistake' to find my reimplementations of them.
+
+// Notably, Sega's compressor used the 'longest-match' algorithm.
+// This doesn't give the best possible compression ratio, but it's fast,
+// easy to implement, and can be done without loading the entire file into
+// memory. The graph-theory-based algorithm Flamewing used might not have
+// been feasible on late-80s PCs.
 
 #include "kosinski_compress.h"
 
@@ -22,45 +30,49 @@
 
 static FILE *output_file;
 
-static unsigned char *match_buffer;
-static size_t match_buffer_index = 0;
+static unsigned char *output_buffer;
+static size_t output_buffer_index = 0;
 
 static unsigned short descriptor;
-static unsigned int descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
+static unsigned int descriptor_bits_done;
 
 static void PutByte(unsigned char byte)
 {
-	static size_t match_buffer_size = 0;
+	// Since descriptors have to come before the data they represent,
+	// we have to buffer the data here, and only flush it to disk when
+	// the descriptor is output.
+	static size_t output_buffer_size = 0;
 
-	if (match_buffer_index + 1 > match_buffer_size)
-		match_buffer = realloc(match_buffer, match_buffer_index + 1);
+	if (output_buffer_index + 1 > output_buffer_size)
+		output_buffer = realloc(output_buffer, output_buffer_index + 1);
 
-	match_buffer[match_buffer_index++] = byte;
-
-}
-
-static void PutDescriptorBit(bool bit)
-{
-	descriptor >>= 1;
-
-	if (bit)
-		descriptor |= 1 << (TOTAL_DESCRIPTOR_BITS - 1);
-
-	if (--descriptor_bits_remaining == 0)
-	{
-		fwrite(&descriptor, 2, 1, output_file);
-		fwrite(match_buffer, match_buffer_index, 1, output_file);
-
-		descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
-		match_buffer_index = 0;
-	}
+	output_buffer[output_buffer_index++] = byte;
 }
 
 static void FlushData(void)
 {
-	descriptor >>= descriptor_bits_remaining;
-	fwrite(&descriptor, 2, 1, output_file);
-	fwrite(match_buffer, match_buffer_index, 1, output_file);
+	// Descriptors are stored byte-swapped, so it's possible the
+	// original compressor did this:
+	//fwrite(&descriptor, 2, 1, output_file);
+	// For portability, however, we're doing it manually
+	fputc(descriptor & 0xFF, output_file);
+	fputc(descriptor >> 8, output_file);
+
+	fwrite(output_buffer, output_buffer_index, 1, output_file);
+}
+
+static void PutDescriptorBit(bool bit)
+{
+	if (bit)
+		descriptor |= 1 << descriptor_bits_done;
+
+	if (++descriptor_bits_done == TOTAL_DESCRIPTOR_BITS)
+	{
+		FlushData();
+
+		descriptor_bits_done = 0;
+		output_buffer_index = 0;
+	}
 }
 
 void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_output_file)
@@ -95,15 +107,15 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
 			#ifndef SHUTUP
-			printf("%X - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%X - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
-			const unsigned int match = longest_match_length - 2;
+			const unsigned int length = longest_match_length - 2;
 
 			PutDescriptorBit(false);
 			PutDescriptorBit(false);
-			PutDescriptorBit(match & 2);
-			PutDescriptorBit(match & 1);
+			PutDescriptorBit(length & 2);
+			PutDescriptorBit(length & 1);
 			PutByte(-longest_match_index);
 
 			file_pointer += longest_match_length;
@@ -111,28 +123,28 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		else if (longest_match_length >= 3 && longest_match_length < 10)
 		{
 			#ifndef SHUTUP
-			printf("%X - Full match found: %X, %X, %X\n", ftell(output_file) + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%X - Full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutByte(distance & 0xFF);
-			PutByte(((distance & 0xFF00) >> (8 - 3)) | (longest_match_length - 2));
+			PutByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
 
 			file_pointer += longest_match_length;
 		}
 		else if (longest_match_length >= 3)
 		{
 			#ifndef SHUTUP
-			printf("%X - Extended full match found: %X, %X, %X\n", ftell(output_file) + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%X - Extended full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutByte(distance & 0xFF);
-			PutByte((distance & 0xFF00) >> (8 - 3));
+			PutByte((distance >> (8 - 3)) & 0xF8);
 			PutByte(longest_match_length - 1);
 
 			file_pointer += longest_match_length;
@@ -140,7 +152,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		else
 		{
 			#ifndef SHUTUP
-			printf("%X - Literal match found: %X at %X\n", ftell(output_file) + match_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
+			printf("%X - Literal match found: %X at %X\n", ftell(output_file) + output_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
 			#endif
 			PutDescriptorBit(true);
 			PutByte(*file_pointer++);
@@ -151,13 +163,13 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 	PutDescriptorBit(false);
 	PutDescriptorBit(true);
 	PutByte(0x00);
-	PutByte(0xF0);
+	PutByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
 	PutByte(0x00);
 
 	FlushData();
 
+	// Mistake 4: There's absolutely no reason to do this
 	// Pad to 0x10
-	size_t bytes_remaining = (-ftell(output_file) & 0xF);
-	for (unsigned int i = 0; i < bytes_remaining; ++i)
+	for (unsigned int i = 0; i < -ftell(output_file) & 0xF; ++i)
 		fputc(0, output_file);
 }
