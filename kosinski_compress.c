@@ -51,7 +51,10 @@ static void PutByte(unsigned char byte)
 	static size_t output_buffer_size = 0;
 
 	if (output_buffer_index + 1 > output_buffer_size)
-		output_buffer = realloc(output_buffer, output_buffer_index + 1);
+	{
+		output_buffer_size += 0x10;
+		output_buffer = realloc(output_buffer, output_buffer_size);
+	}
 
 	output_buffer[output_buffer_index++] = byte;
 }
@@ -105,6 +108,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 			#ifdef DEBUG
 			printf("%lX - Dummy terminator: %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer);
 			#endif
+
 			// Terminator match
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
@@ -186,6 +190,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 			#ifdef DEBUG
 			printf("%lX - Literal match found: %X at %X\n", ftell(output_file) + output_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
 			#endif
+
 			PutDescriptorBit(true);
 			PutByte(*file_pointer++);
 		}
@@ -194,6 +199,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 	#ifdef DEBUG
 	printf("%lX - Terminator: %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer);
 	#endif
+
 	// Terminator match
 	PutDescriptorBit(false);
 	PutDescriptorBit(true);
