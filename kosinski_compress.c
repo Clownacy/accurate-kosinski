@@ -98,6 +98,8 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 	unsigned char *file_pointer = file_buffer;
 	unsigned int last_src_file_index = 0;
 
+	long int file_start = ftell(output_file);
+
 	while (file_pointer < file_buffer + file_size)
 	{
 		// Mistake 5: This is completely pointless
@@ -211,7 +213,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 
 	// Mistake 4: There's absolutely no reason to do this
 	// Pad to 0x10
-	size_t bytes_remaining = -ftell(output_file) & 0xF;
+	size_t bytes_remaining = -(ftell(output_file) - file_start) & 0xF;
 	for (unsigned int i = 0; i < bytes_remaining; ++i)
 		fputc(0, output_file);
 }
