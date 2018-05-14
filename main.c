@@ -2,37 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "load_file_to_buffer.h"
 #include "kosinski_compress.h"
-
-bool LoadFileToBuffer(char *file_name, unsigned char **file_buffer, long int *file_size)
-{
-	bool success = false;
-
-	FILE *file = fopen(file_name, "rb");
-
-	if (file)
-	{
-		fseek(file, 0, SEEK_END);
-		*file_size = ftell(file);
-		rewind(file);
-
-		*file_buffer = malloc(*file_size);
-
-		if (*file_buffer)
-		{
-			fread(*file_buffer, *file_size, 1, file);
-
-			success = true;
-		}
-
-		fclose(file);
-	}
-
-	return success;
-}
 
 int main(int argc, char *argv[])
 {
+	int success = EXIT_FAILURE;
+
 	if (argc < 2)
 	{
 		printf(
@@ -44,23 +20,40 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		int success = EXIT_FAILURE;
 
 		unsigned char *file_buffer;
 		long int file_size;
 
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
 			#endif
-			FILE *dst_file = fopen((argc > 2) ? argv[2] : "out.kos", "wb");
-			KosinskiCompress(file_buffer, file_size, dst_file);
-			fclose(dst_file);
 
-			success = EXIT_SUCCESS;
+			char *out_filename = (argc > 2) ? argv[2] : "out.kos";
+
+			FILE *out_file = fopen(out_filename, "wb");
+
+			if (out_file)
+			{
+				KosinskiCompress(file_buffer, file_size, out_file);
+
+				fclose(out_file);
+
+				success = EXIT_SUCCESS;
+			}
+			else
+			{
+				printf("Could not open '%s'\n", out_filename);
+			}
+
+			free(file_buffer);
 		}
-
-		return success;
+		else
+		{
+			printf("Could not open '%s'\n", argv[1]);
+		}
 	}
+
+	return success;
 }

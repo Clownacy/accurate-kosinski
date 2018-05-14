@@ -53,13 +53,13 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 	{
 		if (PopDescriptor())
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			long int position = ftell(file);
 			#endif
 
 			unsigned char byte = fgetc(file);
 
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
 			#endif
 
@@ -70,7 +70,7 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 		}
 		else if (PopDescriptor())
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			long int position = ftell(file);
 			#endif
 
@@ -84,7 +84,7 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 			{
 				count += 2;
 
-				#ifndef SHUTUP
+				#ifdef DEBUG
 				printf("%lX - Full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 				#endif
 			}
@@ -94,21 +94,21 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 
 				if (count == 1)
 				{
-					#ifndef SHUTUP
+					#ifdef DEBUG
 					printf("%lX - Terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
 					#endif
 					break;
 				}
 				else if (count == 2)
 				{
-					#ifndef SHUTUP
+					#ifdef DEBUG
 					printf("%lX - Dummy terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
 					#endif
 					continue;
 				}
 				else
 				{
-					#ifndef SHUTUP
+					#ifdef DEBUG
 					printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 					#endif
 				}
@@ -127,13 +127,13 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 			if (PopDescriptor())
 				count += 1;
 
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			long int position = ftell(file);
 			#endif
 
 			short distance = 0xFF00 | fgetc(file);
 
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
 			#endif
 

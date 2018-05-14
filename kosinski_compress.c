@@ -102,6 +102,9 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		// before the first match that copies to after 0xA000
 		if (file_pointer - file_buffer >= 0xA000 && last_src_file_index < 0xA000)
 		{
+			#ifdef DEBUG
+			printf("%lX - Dummy terminator: %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer);
+			#endif
 			// Terminator match
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
@@ -135,7 +138,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("%lX - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
@@ -151,7 +154,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 		else if (longest_match_length >= 3 && longest_match_length < 10)
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("%lX - Full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
@@ -165,7 +168,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 		else if (longest_match_length >= 3)
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("%lX - Extended full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
@@ -180,7 +183,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 		else
 		{
-			#ifndef SHUTUP
+			#ifdef DEBUG
 			printf("%lX - Literal match found: %X at %X\n", ftell(output_file) + output_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
 			#endif
 			PutDescriptorBit(true);
@@ -188,6 +191,9 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		}
 	}
 
+	#ifdef DEBUG
+	printf("%lX - Terminator: %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer);
+	#endif
 	// Terminator match
 	PutDescriptorBit(false);
 	PutDescriptorBit(true);

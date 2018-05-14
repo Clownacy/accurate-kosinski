@@ -1,9 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "kosinski_decompress.h"
 
 int main(int argc, char *argv[])
 {
+	int success = EXIT_FAILURE;
+
 	if (argc < 2)
 	{
 		printf("Gimme a file, dumbass\n");
@@ -11,11 +14,33 @@ int main(int argc, char *argv[])
 	else
 	{
 		FILE *in_file = fopen(argv[1], "rb");
-		FILE *out_file = fopen("out.unc", "wb");
 
-		KosinskiDecompress(in_file, out_file);
+		if (in_file)
+		{
+			char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
-		fclose(in_file);
-		fclose(out_file);
+			FILE *out_file = fopen(out_filename, "wb");
+
+			if (out_file)
+			{
+				KosinskiDecompress(in_file, out_file);
+
+				fclose(out_file);
+
+				success = EXIT_SUCCESS;
+			}
+			else
+			{
+				printf("Could not open '%s'\n", out_filename);
+			}
+
+			fclose(in_file);
+		}
+		else
+		{
+			printf("Could not open '%s'\n", argv[1]);
+		}
 	}
+
+	return success;
 }
