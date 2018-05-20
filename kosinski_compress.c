@@ -121,13 +121,13 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 
 		last_src_file_index = file_pointer - file_buffer;
 
-		unsigned int max_match_distance = MIN(file_pointer - file_buffer, MAX_MATCH_DISTANCE);
+		const unsigned int max_match_distance = MIN(file_pointer - file_buffer, MAX_MATCH_DISTANCE);
+		const unsigned int max_match_length = MIN(file_size - (file_pointer - file_buffer), MAX_MATCH_LENGTH);
 
 		unsigned int longest_match_index;
 		unsigned int longest_match_length = 0;
 		for (unsigned int backsearch_index = 1; backsearch_index < max_match_distance + 1; ++backsearch_index)
 		{
-			unsigned int max_match_length = MIN(file_size - (file_pointer - file_buffer), MAX_MATCH_LENGTH);
 
 			unsigned int match_length = 0;
 			while (match_length < max_match_length && file_pointer[match_length] == file_pointer[-backsearch_index + match_length])
