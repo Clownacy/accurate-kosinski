@@ -45,11 +45,16 @@ int main(int argc, char *argv[])
 							printf("The files don't match!\n\n");
 						else
 							printf("Yay the files match.\n\n");
+
+						free(file_buffer1);
 					}
 					else
 					{
 						printf("Could not open '%s'\n", argv[i]);
 					}
+
+					free(file_buffer2);
+					free(file_buffer);
 				}
 				else
 				{
