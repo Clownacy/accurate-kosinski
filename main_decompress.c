@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
 			if (out_file)
 			{
 				fwrite(out_buffer, out_size, 1, out_file);
-
+				free(out_buffer);
 				fclose(out_file);
 
 				success = EXIT_SUCCESS;

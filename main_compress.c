@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
 				size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
 
 				fwrite(out_buffer, out_size, 1, out_file);
-
 				free(out_buffer);
 				fclose(out_file);
 
