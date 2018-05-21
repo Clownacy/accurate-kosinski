@@ -14,17 +14,21 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		unsigned char *file_buffer;
+		unsigned char *in_buffer;
 
-		if (LoadFileToBuffer(argv[1], &file_buffer, NULL))
+		if (LoadFileToBuffer(argv[1], &in_buffer, NULL))
 		{
+			unsigned char *out_buffer;
+			size_t out_size;
+			KosinskiDecompress(in_buffer, &out_buffer, &out_size);
+
 			char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
 			if (out_file)
 			{
-				KosinskiDecompress(file_buffer, out_file);
+				fwrite(out_buffer, out_size, 1, out_file);
 
 				fclose(out_file);
 
@@ -35,7 +39,7 @@ int main(int argc, char *argv[])
 				printf("Could not open '%s'\n", out_filename);
 			}
 
-			free(file_buffer);
+			free(in_buffer);
 		}
 		else
 		{

@@ -12,59 +12,30 @@ int main(int argc, char *argv[])
 	for (int i = 1; i < argc; ++i)
 	{
 		unsigned char *in_file_buffer;
-		if (LoadFileToBuffer(argv[i], &in_file_buffer, NULL))
+		long int in_file_size;
+		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
 		{
-			FILE *out_file = fopen("out.unc", "wb");
+			unsigned char *uncompressed_buffer;
+			size_t uncompressed_size;
+			KosinskiDecompress(in_file_buffer, &uncompressed_buffer, &uncompressed_size);
 
-			if (out_file)
-			{
-				KosinskiDecompress(in_file_buffer, out_file);
+			printf("File '%s' with size %X loaded\n", argv[i], uncompressed_size);
 
-				free(in_file_buffer);
-				fclose(out_file);
+			unsigned char *compressed_buffer;
+			long int compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer);
 
-				unsigned char *file_buffer;
-				long int file_size;
+			free(uncompressed_buffer);
 
-				if (LoadFileToBuffer("out.unc", &file_buffer, &file_size))
-				{
-					printf("File '%s' with size %lX loaded\n", argv[i], file_size);
+			if (in_file_size != compressed_size)
+				printf("File sizes don't match!\n");
 
-					unsigned char *file_buffer1, *file_buffer2;
-					long int file_size1, file_size2;
-
-					file_size2 = KosinskiCompress(file_buffer, file_size, &file_buffer2);
-
-					if (LoadFileToBuffer(argv[i], &file_buffer1, &file_size1))
-					{
-						if (file_size1 != file_size2)
-							printf("File sizes don't match!\n");
-
-						if (memcmp(file_buffer1, file_buffer2, (file_size1 > file_size2) ? file_size2 : file_size1))
-							printf("The files don't match!\n\n");
-						else
-							printf("Yay the files match.\n\n");
-
-						free(file_buffer1);
-					}
-					else
-					{
-						printf("Could not open '%s'\n", argv[i]);
-					}
-
-					free(file_buffer2);
-					free(file_buffer);
-				}
-				else
-				{
-					printf("Could not open '%s'\n", "out.unc");
-				}
-			}
+			if (memcmp(in_file_buffer, compressed_buffer, (in_file_size > compressed_size) ? compressed_size : in_file_size))
+				printf("The files don't match!\n\n");
 			else
-			{
-				printf("Could not open '%s'\n", "out.unc");
-				free(in_file_buffer);
-			}
+				printf("Yay the files match.\n\n");
+
+			free(compressed_buffer);
+			free(in_file_buffer);
 		}
 		else
 		{
@@ -73,7 +44,4 @@ int main(int argc, char *argv[])
 	}
 
 	getchar();
-
-	remove("out.kos");
-	remove("out.unc");;
 }

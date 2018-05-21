@@ -1,13 +1,17 @@
+#include "kosinski_decompress.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory_stream.h"
+
 static unsigned short descriptor;
 static int descriptor_bits_remaining;
 
 static unsigned char *in_file_pointer;
-static FILE *out_file;
+MemoryStream *output_stream;
 
 static unsigned char backsearch_buffer[0x2000];
 static size_t backsearch_buffer_index;
@@ -40,17 +44,18 @@ static void WriteBytes(unsigned int distance, unsigned int count)
 	{
 		unsigned char byte = backsearch_buffer[(backsearch_buffer_index + distance) & 0x1FFF];
 
-		fputc(byte, out_file);
+		MemoryStream_WriteByte(output_stream, byte);
 		backsearch_buffer[backsearch_buffer_index & 0x1FFF] = byte;
 
 		++backsearch_buffer_index;
 	}
 }
 
-void KosinskiDecompress(unsigned char *in_file_buffer, FILE *p_out_file)
+size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
 {	
 	in_file_pointer = in_file_buffer;
-	out_file = p_out_file;
+
+	output_stream = MemoryStream_Init(0x100);
 
 	unsigned int decomp_pointer = 0;
 	GetDescriptor();
@@ -69,7 +74,7 @@ void KosinskiDecompress(unsigned char *in_file_buffer, FILE *p_out_file)
 			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
 			#endif
 
-			fputc(byte, out_file);
+			MemoryStream_WriteByte(output_stream, byte);
 			backsearch_buffer[backsearch_buffer_index++ & 0x1FFF] = byte;
 
 			++decomp_pointer;
@@ -148,4 +153,17 @@ void KosinskiDecompress(unsigned char *in_file_buffer, FILE *p_out_file)
 			decomp_pointer += count;
 		}
 	}
+
+	size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
+	unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
+
+	free(output_stream);
+
+	if (out_file_buffer)
+		*out_file_buffer = output_buffer;
+
+	if (out_file_size)
+		*out_file_size = output_buffer_size;
+
+	return in_file_pointer - in_file_buffer;
 }

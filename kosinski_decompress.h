@@ -1,5 +1,5 @@
 #pragma once
 
-#include <stdio.h>
+#include <stddef.h>
 
-void KosinskiDecompress(unsigned char *in_file_buffer, FILE *p_out_file);
+size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size);
