@@ -17,11 +17,11 @@ kosinski_compress_d.exe: main_compress.c kosinski_compress.c load_file_to_buffer
 kosinski_decompress_d.exe: main_decompress.c kosinski_decompress.c load_file_to_buffer.c memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinskim_compress_d.exe: main_moduled_compress.c kosinski_moduled.c kosinski_decompress.c kosinski_compress.c load_file_to_buffer.c memory_stream.c
+kosinskim_compress_d.exe: main_moduled_compress.c kosinski_moduled_compress.c kosinski_decompress.c kosinski_compress.c load_file_to_buffer.c memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinskim_decompress_d.exe: main_moduled_decompress.c kosinski_moduled.c kosinski_decompress.c kosinski_compress.c load_file_to_buffer.c memory_stream.c
+kosinskim_decompress_d.exe: main_moduled_decompress.c kosinski_moduled_decompress.c kosinski_decompress.c kosinski_compress.c load_file_to_buffer.c memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinskim_compare.exe: main_moduled_compare.c kosinski_moduled.c kosinski_decompress.c kosinski_compress.c load_file_to_buffer.c memory_stream.c
+kosinskim_compare.exe: main_moduled_compare.c kosinski_moduled_compress.c kosinski_decompress.c kosinski_moduled_decompress.c  kosinski_compress.c load_file_to_buffer.c memory_stream.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)

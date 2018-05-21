@@ -1,10 +1,10 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "kosinski_moduled_compress.h"
+#include "kosinski_moduled_decompress.h"
 #include "load_file_to_buffer.h"
-#include "kosinski_moduled.h"
 
 int main(int argc, char *argv[])
 {

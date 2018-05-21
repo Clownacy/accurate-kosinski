@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "kosinski_moduled.h"
+#include "kosinski_moduled_decompress.h"
 #include "load_file_to_buffer.h"
 
 int main(int argc, char *argv[])
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 			if (out_file)
 			{
 				fwrite(out_buffer, out_size, 1, out_file);
-
+				free(out_buffer);
 				fclose(out_file);
 
 				success = EXIT_SUCCESS;

@@ -1,9 +1,9 @@
-#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "kosinski_moduled_compress.h"
 #include "load_file_to_buffer.h"
-#include "kosinski_moduled.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,14 +21,17 @@ int main(int argc, char *argv[])
 	else
 	{
 
-		unsigned char *file_buffer;
-		long int file_size;
+		unsigned char *in_buffer;
+		long int in_size;
 
-		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
+		if (LoadFileToBuffer(argv[1], &in_buffer, &in_size))
 		{
 			#ifdef DEBUG
-			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
+			printf("File '%s' with size %lX loaded\n", argv[1], in_size);
 			#endif
+
+			unsigned char *out_buffer;
+			size_t out_size = KosinskiCompressModuled(in_buffer, in_size, &out_buffer);
 
 			char *out_filename = (argc > 2) ? argv[2] : "out.kosm";
 
@@ -36,11 +39,7 @@ int main(int argc, char *argv[])
 
 			if (out_file)
 			{
-				unsigned char *out_buffer;
-				size_t out_size = KosinskiCompressModuled(file_buffer, file_size, &out_buffer);
-
 				fwrite(out_buffer, out_size, 1, out_file);
-
 				free(out_buffer);
 				fclose(out_file);
 
@@ -51,7 +50,7 @@ int main(int argc, char *argv[])
 				printf("Could not open '%s'\n", out_filename);
 			}
 
-			free(file_buffer);
+			free(in_buffer);
 		}
 		else
 		{
