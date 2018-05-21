@@ -6,6 +6,7 @@
 #include "load_file_to_buffer.h"
 #include "kosinski_compress.h"
 #include "kosinski_decompress.h"
+#include "minmax.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
 			if (in_file_size != compressed_size)
 				printf("File sizes don't match!\n");
 
-			if (memcmp(in_file_buffer, compressed_buffer, (in_file_size > compressed_size) ? compressed_size : in_file_size))
+			if (memcmp(in_file_buffer, compressed_buffer, MIN(in_file_size, compressed_size)))
 				printf("The files don't match!\n\n");
 			else
 				printf("Yay the files match.\n\n");

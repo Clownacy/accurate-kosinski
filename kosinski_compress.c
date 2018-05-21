@@ -27,11 +27,7 @@
 #include <string.h>
 
 #include "memory_stream.h"
-
-#undef MIN
-#undef MAX
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#include "minmax.h"
 
 #define MAX_MATCH_LENGTH 0xFD				// Mistake 1: This should be 0x100
 #define MAX_MATCH_DISTANCE (0x2000 - MAX_MATCH_LENGTH)	// Mistake 2: This should just be 0x2000
