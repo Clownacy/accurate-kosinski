@@ -33,15 +33,15 @@ int main(int argc, char *argv[])
 			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
 			#endif
 
+			unsigned char *out_buffer;
+			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
+
 			char *out_filename = (argc > 2) ? argv[2] : "out.kos";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
 			if (out_file)
 			{
-				unsigned char *out_buffer;
-				size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
-
 				fwrite(out_buffer, out_size, 1, out_file);
 				free(out_buffer);
 				fclose(out_file);
