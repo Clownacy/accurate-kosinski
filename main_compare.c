@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lib/kosinski_compress.h"
+#include "lib/kosinski_decompress.h"
+#include "lib/minmax.h"
+
 #include "load_file_to_buffer.h"
-#include "kosinski_compress.h"
-#include "kosinski_decompress.h"
-#include "minmax.h"
 
 int main(int argc, char *argv[])
 {
