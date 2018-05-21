@@ -10,7 +10,9 @@ void KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, FILE 
 	fputc(file_size >> 8, output_file);
 	fputc(file_size & 0xFF, output_file);
 
-	for (unsigned int i = 0; i < (file_size - 1) >> 12; ++i)
+	const unsigned int extra_module_count = (file_size - 1) >> 12;
+
+	for (unsigned int i = 0; i < extra_module_count; ++i)
 	{
 		KosinskiCompress(file_buffer, 0x1000, output_file);
 		file_buffer += 0x1000;
@@ -21,14 +23,14 @@ void KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, FILE 
 
 void KosinskiDecompressModuled(FILE *in_file, FILE *out_file)
 {
-	unsigned char byte1 = fgetc(in_file);
-	unsigned short size = fgetc(in_file) | (byte1 << 8);
+	const unsigned char byte1 = fgetc(in_file);
+	const unsigned short size = fgetc(in_file) | (byte1 << 8);
 
-	unsigned int module_count = ((size - 1) >> 12);
-	if (module_count == 0xA)
-		module_count = 8;
+	unsigned int extra_module_count = ((size - 1) >> 12);
+	if (extra_module_count == 0xA)
+		extra_module_count = 8;
 
-	for (unsigned int i = 0; i < module_count; ++i)
+	for (unsigned int i = 0; i < extra_module_count; ++i)
 	{
 		KosinskiDecompress(in_file, out_file);
 
