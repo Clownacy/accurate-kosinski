@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #undef MIN
 #undef MAX
@@ -35,28 +36,57 @@
 
 #define TOTAL_DESCRIPTOR_BITS 16
 
-static FILE *output_file;
-
 static unsigned char *output_buffer;
 static size_t output_buffer_index;
+
+static unsigned char *match_buffer;
+static size_t match_buffer_index;
 
 static unsigned short descriptor;
 static unsigned int descriptor_bits_remaining;
 
-static void PutByte(unsigned char byte)
+static void WriteBytes(unsigned char *bytes, unsigned int byte_count)
 {
-	// Since descriptors have to come before the data they represent,
-	// we have to buffer the data here, and only flush it to disk when
-	// the descriptor is output.
+	static size_t output_buffer_size = 0;
+
+	while (output_buffer_index + byte_count > output_buffer_size)
+	{
+		output_buffer_size += 0x100;
+		output_buffer = realloc(output_buffer, output_buffer_size);
+	}
+
+	memcpy(&output_buffer[output_buffer_index], bytes, byte_count);
+
+	output_buffer_index += byte_count;
+}
+
+static void WriteByte(unsigned char byte)
+{
 	static size_t output_buffer_size = 0;
 
 	if (output_buffer_index + 1 > output_buffer_size)
 	{
-		output_buffer_size += 0x10;
+		output_buffer_size += 0x100;
 		output_buffer = realloc(output_buffer, output_buffer_size);
 	}
 
 	output_buffer[output_buffer_index++] = byte;
+}
+
+static void PutMatchByte(unsigned char byte)
+{
+	// Since descriptors have to come before the data they represent,
+	// we have to buffer the data here, and only flush it to disk when
+	// the descriptor is output.
+	static size_t match_buffer_size = 0;
+
+	if (match_buffer_index + 1 > match_buffer_size)
+	{
+		match_buffer_size += 0x10;
+		match_buffer = realloc(match_buffer, match_buffer_size);
+	}
+
+	match_buffer[match_buffer_index++] = byte;
 }
 
 static void FlushData(void)
@@ -67,10 +97,10 @@ static void FlushData(void)
 	// original compressor did this:
 	//fwrite(&descriptor, 2, 1, output_file);
 	// For portability, however, we're doing it manually
-	fputc(descriptor & 0xFF, output_file);
-	fputc(descriptor >> 8, output_file);
+	WriteByte(descriptor & 0xFF);
+	WriteByte(descriptor >> 8);
 
-	fwrite(output_buffer, output_buffer_index, 1, output_file);
+	WriteBytes(match_buffer, match_buffer_index);
 }
 
 static void PutDescriptorBit(bool bit)
@@ -85,38 +115,35 @@ static void PutDescriptorBit(bool bit)
 		FlushData();
 
 		descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
-		output_buffer_index = 0;
+		match_buffer_index = 0;
 	}
 }
 
-void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_output_file)
+size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer)
 {
-	output_file = p_output_file;
-	output_buffer_index = 0;
+	match_buffer_index = 0;
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 	unsigned char *file_pointer = file_buffer;
 	unsigned int last_src_file_index = 0;
 
-	long int file_start = ftell(output_file);
-
 	while (file_pointer < file_buffer + file_size)
 	{
 		// Mistake 5: This is completely pointless
-		// For some reason, the original compressor would insert dummy matches
+		// For some reason, the original compressor would insert a dummy match
 		// before the first match that copies to after 0xA000
 		if (file_pointer - file_buffer >= 0xA000 && last_src_file_index < 0xA000)
 		{
 			#ifdef DEBUG
-			printf("%lX - Dummy terminator: %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer);
+			printf("%X - Dummy terminator: %X\n", output_buffer_index + match_buffer_index + 2, file_pointer - file_buffer);
 			#endif
 
 			// Terminator match
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
-			PutByte(0x00);
-			PutByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
-			PutByte(0x01);
+			PutMatchByte(0x00);
+			PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
+			PutMatchByte(0x01);
 		}
 
 		last_src_file_index = file_pointer - file_buffer;
@@ -145,7 +172,7 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
 			#ifdef DEBUG
-			printf("%lX - Inline dictionary match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%X - Inline dictionary match found: %X, %X, %X\n", output_buffer_index + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int length = longest_match_length - 2;
@@ -154,66 +181,69 @@ void KosinskiCompress(unsigned char *file_buffer, size_t file_size, FILE *p_outp
 			PutDescriptorBit(false);
 			PutDescriptorBit(length & 2);
 			PutDescriptorBit(length & 1);
-			PutByte(-longest_match_index);
+			PutMatchByte(-longest_match_index);
 
 			file_pointer += longest_match_length;
 		}
 		else if (longest_match_length >= 3 && longest_match_length < 10)
 		{
 			#ifdef DEBUG
-			printf("%lX - Full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%X - Full match found: %X, %X, %X\n", output_buffer_index + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
-			PutByte(distance & 0xFF);
-			PutByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
+			PutMatchByte(distance & 0xFF);
+			PutMatchByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
 
 			file_pointer += longest_match_length;
 		}
 		else if (longest_match_length >= 3)
 		{
 			#ifdef DEBUG
-			printf("%lX - Extended full match found: %X, %X, %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			printf("%X - Extended full match found: %X, %X, %X\n", output_buffer_index + match_buffer_index + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
-			PutByte(distance & 0xFF);
-			PutByte((distance >> (8 - 3)) & 0xF8);
-			PutByte(longest_match_length - 1);
+			PutMatchByte(distance & 0xFF);
+			PutMatchByte((distance >> (8 - 3)) & 0xF8);
+			PutMatchByte(longest_match_length - 1);
 
 			file_pointer += longest_match_length;
 		}
 		else
 		{
 			#ifdef DEBUG
-			printf("%lX - Literal match found: %X at %X\n", ftell(output_file) + output_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
+			printf("%X - Literal match found: %X at %X\n", output_buffer_index + match_buffer_index + 2, *file_pointer, file_pointer - file_buffer);
 			#endif
 
 			PutDescriptorBit(true);
-			PutByte(*file_pointer++);
+			PutMatchByte(*file_pointer++);
 		}
 	}
 
 	#ifdef DEBUG
-	printf("%lX - Terminator: %X\n", ftell(output_file) + output_buffer_index + 2, file_pointer - file_buffer);
+	printf("%X - Terminator: %X\n", output_buffer_index + match_buffer_index + 2, file_pointer - file_buffer);
 	#endif
 
 	// Terminator match
 	PutDescriptorBit(false);
 	PutDescriptorBit(true);
-	PutByte(0x00);
-	PutByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
-	PutByte(0x00);
+	PutMatchByte(0x00);
+	PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
+	PutMatchByte(0x00);
 
 	FlushData();
 
 	// Mistake 4: There's absolutely no reason to do this
 	// Pad to 0x10
-	size_t bytes_remaining = -(ftell(output_file) - file_start) & 0xF;
+	size_t bytes_remaining = -output_buffer_index & 0xF;
 	for (unsigned int i = 0; i < bytes_remaining; ++i)
-		fputc(0, output_file);
+		WriteByte(0);
+
+	*p_output_buffer = output_buffer;
+	return output_buffer_index;
 }

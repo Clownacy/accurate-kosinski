@@ -14,11 +14,15 @@ void KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, FILE 
 
 	for (unsigned int i = 0; i < extra_module_count; ++i)
 	{
-		KosinskiCompress(file_buffer, 0x1000, output_file);
+		unsigned char *compressed_buffer;
+		size_t compressed_size = KosinskiCompress(file_buffer, 0x1000, &compressed_buffer);
+		fwrite(compressed_buffer, compressed_size, 1, output_file);
 		file_buffer += 0x1000;
 	}
 
-	KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, output_file);
+	unsigned char *compressed_buffer;
+	size_t compressed_size = KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, &compressed_buffer);
+	fwrite(compressed_buffer, compressed_size, 1, output_file);
 }
 
 void KosinskiDecompressModuled(FILE *in_file, FILE *out_file)

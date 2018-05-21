@@ -31,42 +31,24 @@ int main(int argc, char *argv[])
 				{
 					printf("File '%s' with size %lX loaded\n", argv[i], file_size);
 
-					FILE *dst_file = fopen("out.kos", "wb");
+					unsigned char *file_buffer1, *file_buffer2;
+					long int file_size1, file_size2;
 
-					if (dst_file)
+					file_size2 = KosinskiCompress(file_buffer, file_size, &file_buffer2);
+
+					if (LoadFileToBuffer(argv[i], &file_buffer1, &file_size1))
 					{
-						KosinskiCompress(file_buffer, file_size, dst_file);
-						fclose(dst_file);
+						if (file_size1 != file_size2)
+							printf("File sizes don't match!\n");
 
-						unsigned char *file_buffer1, *file_buffer2;
-						long int file_size1, file_size2;
-
-						if (LoadFileToBuffer(argv[i], &file_buffer1, &file_size1))
-						{
-							if (LoadFileToBuffer("out.kos", &file_buffer2, &file_size2))
-							{
-								if (file_size1 != file_size2)
-									printf("File sizes don't match!\n");
-
-								if (memcmp(file_buffer1, file_buffer2, (file_size1 > file_size2) ? file_size2 : file_size1))
-									printf("The files don't match!\n\n");
-								else
-									printf("Yay the files match.\n\n");
-							}
-							else
-							{
-								printf("Could not open '%s'\n", "out.kos");
-							}
-						}
+						if (memcmp(file_buffer1, file_buffer2, (file_size1 > file_size2) ? file_size2 : file_size1))
+							printf("The files don't match!\n\n");
 						else
-						{
-							printf("Could not open '%s'\n", argv[i]);
-						}
+							printf("Yay the files match.\n\n");
 					}
 					else
 					{
-						printf("Could not open '%s'\n", "out.kos");
-						fclose(dst_file);
+						printf("Could not open '%s'\n", argv[i]);
 					}
 				}
 				else

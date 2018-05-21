@@ -36,8 +36,12 @@ int main(int argc, char *argv[])
 
 			if (out_file)
 			{
-				KosinskiCompress(file_buffer, file_size, out_file);
+				unsigned char *out_buffer;
+				size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
 
+				fwrite(out_buffer, out_size, 1, out_file);
+
+				free(out_buffer);
 				fclose(out_file);
 
 				success = EXIT_SUCCESS;
