@@ -1,3 +1,5 @@
+// Copyright (c) 2018 Clownacy
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

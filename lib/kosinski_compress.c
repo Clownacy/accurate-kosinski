@@ -203,7 +203,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	free(MemoryStream_GetBuffer(match_stream));
 	free(match_stream);
 
-	// Mistake 4: There's absolutely no reason to do this
+	// Mistake 4: There's absolutely no reason to do this (except for Moduled Kosinski)
 	// Pad to 0x10
 	size_t bytes_remaining = -MemoryStream_GetIndex(output_stream) & 0xF;
 	for (unsigned int i = 0; i < bytes_remaining; ++i)

@@ -1,3 +1,5 @@
+// Copyright (c) 2018 Clownacy
+
 #include "kosinski_moduled_compress.h"
 
 #include <stddef.h>

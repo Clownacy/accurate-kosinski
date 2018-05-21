@@ -1,3 +1,5 @@
+// Copyright (c) 2018 Clownacy
+
 #include "load_file_to_buffer.h"
 
 #include <stdbool.h>

@@ -1,3 +1,5 @@
+// Copyright (c) 2018 Clownacy
+
 #include "kosinski_decompress.h"
 
 #include <stdbool.h>
