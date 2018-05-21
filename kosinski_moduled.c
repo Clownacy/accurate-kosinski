@@ -4,6 +4,7 @@
 
 #include "kosinski_compress.h"
 #include "kosinski_decompress.h"
+#include "load_file_to_memory.h"
 
 void KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, FILE *output_file)
 {
@@ -27,6 +28,8 @@ void KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, FILE 
 
 void KosinskiDecompressModuled(FILE *in_file, FILE *out_file)
 {
+	if (LoadFileToBuffer(argv[1], &file_buffer, NULL))
+
 	const unsigned char byte1 = fgetc(in_file);
 	const unsigned short size = fgetc(in_file) | (byte1 << 8);
 

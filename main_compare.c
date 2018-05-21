@@ -11,17 +11,16 @@ int main(int argc, char *argv[])
 {
 	for (int i = 1; i < argc; ++i)
 	{
-		FILE *in_file = fopen(argv[i], "rb");
-
-		if (in_file)
+		unsigned char *in_file_buffer;
+		if (LoadFileToBuffer(argv[i], &in_file_buffer, NULL))
 		{
 			FILE *out_file = fopen("out.unc", "wb");
 
 			if (out_file)
 			{
-				KosinskiDecompress(in_file, out_file);
+				KosinskiDecompress(in_file_buffer, out_file);
 
-				fclose(in_file);
+				free(in_file_buffer);
 				fclose(out_file);
 
 				unsigned char *file_buffer;
@@ -64,7 +63,7 @@ int main(int argc, char *argv[])
 			else
 			{
 				printf("Could not open '%s'\n", "out.unc");
-				fclose(in_file);
+				free(in_file_buffer);
 			}
 		}
 		else

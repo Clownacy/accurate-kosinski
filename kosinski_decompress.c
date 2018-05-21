@@ -6,11 +6,19 @@
 static unsigned short descriptor;
 static int descriptor_bits_remaining;
 
-static FILE *file;
+static unsigned char *in_file_pointer;
 static FILE *out_file;
 
 static unsigned char backsearch_buffer[0x2000];
 static size_t backsearch_buffer_index;
+
+static void GetDescriptor(void)
+{
+	descriptor_bits_remaining = 16;
+
+	descriptor = (in_file_pointer[1] << 8) | in_file_pointer[0];
+	in_file_pointer += 2;
+}
 
 static bool PopDescriptor(void)
 {
@@ -20,8 +28,7 @@ static bool PopDescriptor(void)
 
 	if (--descriptor_bits_remaining == 0)
 	{
-		fread(&descriptor, 2, 1, file);
-		descriptor_bits_remaining = 16;
+		GetDescriptor();
 	}
 
 	return result;
@@ -40,24 +47,23 @@ static void WriteBytes(unsigned int distance, unsigned int count)
 	}
 }
 
-void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
+void KosinskiDecompress(unsigned char *in_file_buffer, FILE *p_out_file)
 {	
-	file = p_in_file;
+	in_file_pointer = in_file_buffer;
 	out_file = p_out_file;
-	descriptor_bits_remaining = 16;
 
 	unsigned int decomp_pointer = 0;
-	fread(&descriptor, 2, 1, file);
+	GetDescriptor();
 
 	for (;;)
 	{
 		if (PopDescriptor())
 		{
 			#ifdef DEBUG
-			long int position = ftell(file);
+			long int position = in_file_pointer - in_file_buffer;
 			#endif
 
-			unsigned char byte = fgetc(file);
+			unsigned char byte = *in_file_pointer++;
 
 			#ifdef DEBUG
 			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
@@ -71,11 +77,11 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 		else if (PopDescriptor())
 		{
 			#ifdef DEBUG
-			long int position = ftell(file);
+			long int position = in_file_pointer - in_file_buffer;
 			#endif
 
-			unsigned char byte1 = fgetc(file);
-			unsigned char byte2 = fgetc(file);
+			unsigned char byte1 = *in_file_pointer++;
+			unsigned char byte2 = *in_file_pointer++;
 
 			short distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
 			unsigned char count = byte2 & 7;
@@ -90,7 +96,7 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 			}
 			else
 			{
-				count = fgetc(file) + 1;
+				count = *in_file_pointer++ + 1;
 
 				if (count == 1)
 				{
@@ -128,10 +134,10 @@ void KosinskiDecompress(FILE *p_in_file, FILE *p_out_file)
 				count += 1;
 
 			#ifdef DEBUG
-			long int position = ftell(file);
+			long int position = in_file_pointer - in_file_buffer;
 			#endif
 
-			short distance = 0xFF00 | fgetc(file);
+			short distance = 0xFF00 | *in_file_pointer++;
 
 			#ifdef DEBUG
 			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);

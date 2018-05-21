@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "load_file_to_buffer.h"
 #include "kosinski_compress.h"
+#include "load_file_to_buffer.h"
 
 int main(int argc, char *argv[])
 {
