@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "kosinski_moduled.h"
+#include "load_file_to_buffer.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,9 +14,9 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		FILE *in_file = fopen(argv[1], "rb");
+		unsigned char *file_buffer;
 
-		if (in_file)
+		if (LoadFileToBuffer(argv[1], &file_buffer, NULL))
 		{
 			char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
 
 			if (out_file)
 			{
-				KosinskiDecompressModuled(in_file, out_file);
+				KosinskiDecompressModuled(file_buffer, out_file);
 
 				fclose(out_file);
 
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 				printf("Could not open '%s'\n", out_filename);
 			}
 
-			fclose(in_file);
+			free(file_buffer);
 		}
 		else
 		{

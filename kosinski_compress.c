@@ -61,6 +61,11 @@ static void FlushData(void)
 	MemoryStream_WriteBytes(output_stream, match_buffer, match_buffer_size);
 }
 
+static void PutMatchByte(unsigned char byte)
+{
+	MemoryStream_WriteByte(match_stream, byte);
+}
+
 static void PutDescriptorBit(bool bit)
 {
 	descriptor >>= 1;
@@ -101,9 +106,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 			// Terminator match
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
-			MemoryStream_WriteByte(match_stream, 0x00);
-			MemoryStream_WriteByte(match_stream, 0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
-			MemoryStream_WriteByte(match_stream, 0x01);
+			PutMatchByte(0x00);
+			PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
+			PutMatchByte(0x01);
 		}
 
 		last_src_file_index = file_pointer - file_buffer;
@@ -141,7 +146,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 			PutDescriptorBit(false);
 			PutDescriptorBit(length & 2);
 			PutDescriptorBit(length & 1);
-			MemoryStream_WriteByte(match_stream, -longest_match_index);
+			PutMatchByte(-longest_match_index);
 
 			file_pointer += longest_match_length;
 		}
@@ -154,8 +159,8 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
-			MemoryStream_WriteByte(match_stream, distance & 0xFF);
-			MemoryStream_WriteByte(match_stream, ((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
+			PutMatchByte(distance & 0xFF);
+			PutMatchByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
 
 			file_pointer += longest_match_length;
 		}
@@ -168,9 +173,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
-			MemoryStream_WriteByte(match_stream, distance & 0xFF);
-			MemoryStream_WriteByte(match_stream, (distance >> (8 - 3)) & 0xF8);
-			MemoryStream_WriteByte(match_stream, longest_match_length - 1);
+			PutMatchByte(distance & 0xFF);
+			PutMatchByte((distance >> (8 - 3)) & 0xF8);
+			PutMatchByte(longest_match_length - 1);
 
 			file_pointer += longest_match_length;
 		}
@@ -181,7 +186,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 			#endif
 
 			PutDescriptorBit(true);
-			MemoryStream_WriteByte(match_stream, *file_pointer++);
+			PutMatchByte(*file_pointer++);
 		}
 	}
 
@@ -192,9 +197,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	// Terminator match
 	PutDescriptorBit(false);
 	PutDescriptorBit(true);
-	MemoryStream_WriteByte(match_stream, 0x00);
-	MemoryStream_WriteByte(match_stream, 0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
-	MemoryStream_WriteByte(match_stream, 0x00);
+	PutMatchByte(0x00);
+	PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
+	PutMatchByte(0x00);
 
 	FlushData();
 
