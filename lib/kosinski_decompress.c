@@ -15,9 +15,6 @@ static int descriptor_bits_remaining;
 static unsigned char *in_file_pointer;
 MemoryStream *output_stream;
 
-static unsigned char backsearch_buffer[0x2000];
-static size_t backsearch_buffer_index;
-
 static void GetDescriptor(void)
 {
 	descriptor_bits_remaining = 16;
@@ -40,16 +37,13 @@ static bool PopDescriptor(void)
 	return result;
 }
 
-static void WriteBytes(unsigned int distance, unsigned int count)
+static void WriteBytes(short distance, unsigned int count)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
-		unsigned char byte = backsearch_buffer[(backsearch_buffer_index + distance) & 0x1FFF];
+		unsigned char byte = MemoryStream_GetBuffer(output_stream)[MemoryStream_GetIndex(output_stream) + distance];
 
 		MemoryStream_WriteByte(output_stream, byte);
-		backsearch_buffer[backsearch_buffer_index & 0x1FFF] = byte;
-
-		++backsearch_buffer_index;
 	}
 }
 
@@ -77,7 +71,6 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 			#endif
 
 			MemoryStream_WriteByte(output_stream, byte);
-			backsearch_buffer[backsearch_buffer_index++ & 0x1FFF] = byte;
 
 			++decomp_pointer;
 		}
