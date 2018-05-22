@@ -20,12 +20,12 @@ int main(int argc, char *argv[])
 		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
 		{
 			unsigned char *uncompressed_buffer;
-			size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer);
+			const size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer);
 
 			printf("File '%s' with size %X loaded\n", argv[i], uncompressed_size);
 
 			unsigned char *compressed_buffer;
-			long int compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer);
+			const long int compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer);
 
 			free(uncompressed_buffer);
 

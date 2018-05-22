@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 			printf("File '%s' with size %X loaded\n", argv[i], uncompressed_size);
 
 			unsigned char *compressed_buffer;
-			long int compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer);
+			const long int compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer);
 
 			free(uncompressed_buffer);
 

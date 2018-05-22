@@ -51,7 +51,7 @@ static void FlushData(void)
 	MemoryStream_WriteByte(output_stream, descriptor & 0xFF);
 	MemoryStream_WriteByte(output_stream, descriptor >> 8);
 
-	size_t match_buffer_size = MemoryStream_GetIndex(match_stream);
+	const size_t match_buffer_size = MemoryStream_GetIndex(match_stream);
 	unsigned char *match_buffer = MemoryStream_GetBuffer(match_stream);
 
 	MemoryStream_WriteBytes(output_stream, match_buffer, match_buffer_size);
@@ -209,11 +209,13 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	for (unsigned int i = 0; i < bytes_remaining; ++i)
 		MemoryStream_WriteByte(output_stream, 0);
 
-	size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
+	const size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
 	unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
 
 	free(output_stream);
 
-	*p_output_buffer = output_buffer;
+	if (p_output_buffer)
+		*p_output_buffer = output_buffer;
+
 	return output_buffer_size;
 }

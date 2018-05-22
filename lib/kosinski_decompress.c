@@ -25,14 +25,12 @@ static void GetDescriptor(void)
 
 static bool PopDescriptor(void)
 {
-	bool result = descriptor & 1;
+	const bool result = descriptor & 1;
 
 	descriptor >>= 1;
 
 	if (--descriptor_bits_remaining == 0)
-	{
 		GetDescriptor();
-	}
 
 	return result;
 }
@@ -41,7 +39,7 @@ static void WriteBytes(short distance, unsigned int count)
 {
 	for (unsigned int i = 0; i < count; ++i)
 	{
-		unsigned char byte = MemoryStream_GetBuffer(output_stream)[MemoryStream_GetIndex(output_stream) + distance];
+		const unsigned char byte = MemoryStream_GetBuffer(output_stream)[MemoryStream_GetIndex(output_stream) + distance];
 
 		MemoryStream_WriteByte(output_stream, byte);
 	}
@@ -61,10 +59,10 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		if (PopDescriptor())
 		{
 			#ifdef DEBUG
-			long int position = in_file_pointer - in_file_buffer;
+			const long int position = in_file_pointer - in_file_buffer;
 			#endif
 
-			unsigned char byte = *in_file_pointer++;
+			const unsigned char byte = *in_file_pointer++;
 
 			#ifdef DEBUG
 			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
@@ -77,13 +75,13 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		else if (PopDescriptor())
 		{
 			#ifdef DEBUG
-			long int position = in_file_pointer - in_file_buffer;
+			const long int position = in_file_pointer - in_file_buffer;
 			#endif
 
-			unsigned char byte1 = *in_file_pointer++;
-			unsigned char byte2 = *in_file_pointer++;
+			const unsigned char byte1 = *in_file_pointer++;
+			const unsigned char byte2 = *in_file_pointer++;
 
-			short distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
+			const short distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
 			unsigned char count = byte2 & 7;
 
 			if (count)
@@ -134,10 +132,10 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				count += 1;
 
 			#ifdef DEBUG
-			long int position = in_file_pointer - in_file_buffer;
+			const long int position = in_file_pointer - in_file_buffer;
 			#endif
 
-			short distance = 0xFF00 | *in_file_pointer++;
+			const short distance = 0xFF00 | *in_file_pointer++;
 
 			#ifdef DEBUG
 			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
@@ -149,7 +147,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		}
 	}
 
-	size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
+	const size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
 	unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
 
 	free(output_stream);
