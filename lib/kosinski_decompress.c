@@ -51,7 +51,10 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 	output_stream = MemoryStream_Init(0x100);
 
+	#ifdef DEBUG
 	unsigned int decomp_pointer = 0;
+	#endif
+
 	GetDescriptor();
 
 	for (;;)
@@ -70,7 +73,9 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 			MemoryStream_WriteByte(output_stream, byte);
 
+			#ifdef DEBUG
 			++decomp_pointer;
+			#endif
 		}
 		else if (PopDescriptor())
 		{
@@ -120,7 +125,9 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 			WriteBytes(distance, count);
 
+			#ifdef DEBUG
 			decomp_pointer += count;
+			#endif
 		}
 		else
 		{
@@ -143,7 +150,9 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 			WriteBytes(distance, count);
 
+			#ifdef DEBUG
 			decomp_pointer += count;
+			#endif
 		}
 	}
 

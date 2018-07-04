@@ -19,6 +19,41 @@
 // it would search for 0FAE6614 instead. Usually, the match has a 0 added
 // to the end of it, but other times it's a different number entirely.
 
+// Possible explanation for Mistake 5:
+
+/*
+"Hrm. I think I might have just figured out a quirk of Kosinski.
+
+I might just be talking out of my ass, but Kosinski has some reserved 'command'
+values: Basically, if you try to do a long match with a length of 0, that marks
+the end of the file. Oddly enough, a long match with a length of 1 is also a
+reserved command, but it doesn't do anything.
+
+Notably, 1-length commands are inserted whenever the decompressed data so far
+passes... I think it might have been 0x1000 bytes.
+
+At the time I didn't think much of it, but just earlier today I was being hassled
+by libsndfile. It's an audio decoder that doesn't have a function to give you the
+total decompressed size of the file. Likewise, Kosinski doesn't have a header to
+tell you that either.
+
+My problem with this was, I didn't know know big a buffer to allocate before
+calling libsndfile's decompressor. I eventually came up with the idea of allocating
+an 0x8000-byte buffer, and asking for a maximum of 0x8000 bytes. If I got 0x8000
+back, then I'd allocate another 0x8000-byte buffer, and ask for another 0x8000
+bytes, and so on.
+
+Kosinski decompression on the MD is notable because there's no bounds checking
+or anything. There's never a reserved Kosinski decompression buffer, and Sonic
+(obviously) doesn't use a memory allocation system. It just decompresses over the
+chunk table most of the time.
+
+So what if, the 1-length dummy command was actually for signalling to the original
+PC decompressor that its theoretical 0x1000-byte buffer wasn't gonna be big enough
+to hold the decompressed file, prompting it to either flush to disk, or maybe
+allocate a larger/other buffer before continuing?"
+*/
+
 #include "kosinski_compress.h"
 
 #include <stdbool.h>
