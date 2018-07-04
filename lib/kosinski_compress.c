@@ -81,7 +81,6 @@ static void FlushData(void)
 	// Descriptors are stored byte-swapped, so it's possible the
 	// original compressor did this:
 	//fwrite(&descriptor, 2, 1, output_file);
-	// For portability, however, we're doing it manually
 	MemoryStream_WriteByte(output_stream, descriptor & 0xFF);
 	MemoryStream_WriteByte(output_stream, descriptor >> 8);
 

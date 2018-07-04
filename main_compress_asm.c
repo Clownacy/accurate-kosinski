@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-
 		unsigned char *file_buffer;
 		long int file_size;
 
@@ -43,6 +42,7 @@ int main(int argc, char *argv[])
 			if (out_file)
 			{
 				size_t claimed_out_size = (out_size + 0x100) & ~0xFF;
+				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'
 				fprintf(out_file, "; à≥èkëO $%lx  à≥èkå„ $%x  à≥èkó¶ %.1f%%  ÉZÉãêî %ld", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
 
 				unsigned int index = 0;
