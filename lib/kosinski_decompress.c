@@ -113,6 +113,11 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 					#ifdef DEBUG
 					printf("%lX - 0xA000 boundary flag: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
 					#endif
+
+					// I would use this flag for its presumable intended purpose,
+					// and increase the buffer, but MemoryStream already does a
+					// pretty good job.
+
 					continue;
 				}
 				else
