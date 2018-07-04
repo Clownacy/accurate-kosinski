@@ -49,8 +49,8 @@
 
 // So what if, the 1-length dummy command was actually for signalling to the original
 // PC decompressor that its theoretical 0x1000-byte buffer wasn't gonna be big enough
-// to hold the decompressed file, prompting it to either flush to disk, or maybe
-// allocate a larger/other buffer before continuing?"
+// to hold the decompressed file, prompting it to allocate a larger buffer before
+// continuing?"
 
 
 #include "kosinski_compress.h"
@@ -243,7 +243,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	free(MemoryStream_GetBuffer(match_stream));
 	free(match_stream);
 
-	// Mistake 4: There's absolutely no reason to do this (except for Moduled Kosinski).
+	// Mistake 4: There's absolutely no reason to do this.
 	// This might have been because the original compressor's ASM output could only write
 	// exactly 0x10 values per dc.b instruction.
 
