@@ -48,7 +48,7 @@
 // chunk table most of the time.
 
 // So what if, the 1-length dummy command was actually for signalling to the original
-// PC decompressor that its theoretical 0x1000-byte buffer wasn't gonna be big enough
+// PC decompressor that its supposedly 0xA000-byte buffer wasn't gonna be big enough
 // to hold the decompressed file, prompting it to allocate a larger buffer before
 // continuing?"
 
