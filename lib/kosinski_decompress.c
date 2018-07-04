@@ -3,12 +3,14 @@
 #include "kosinski_decompress.h"
 
 #include <stdbool.h>
+#ifdef DEBUG
 #include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
 static unsigned short descriptor;
-static int descriptor_bits_remaining;
+static unsigned int descriptor_bits_remaining;
 
 static unsigned char *in_file_pointer;
 
@@ -61,7 +63,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		if (PopDescriptor())
 		{
 			#ifdef DEBUG
-			const long position = in_file_pointer - in_file_buffer;
+			const unsigned long position = in_file_pointer - in_file_buffer;
 			#endif
 
 			const unsigned char byte = *in_file_pointer++;
@@ -75,7 +77,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		else if (PopDescriptor())
 		{
 			#ifdef DEBUG
-			const long position = in_file_pointer - in_file_buffer;
+			const unsigned long position = in_file_pointer - in_file_buffer;
 			#endif
 
 			const unsigned char byte1 = *in_file_pointer++;
@@ -136,7 +138,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				count += 1;
 
 			#ifdef DEBUG
-			const long position = in_file_pointer - in_file_buffer;
+			const unsigned long position = in_file_pointer - in_file_buffer;
 			#endif
 
 			const short distance = 0xFF00 | *in_file_pointer++;

@@ -125,12 +125,11 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	{
 		// Mistake 5: This is completely pointless.
 		// For some reason, the original compressor would insert a dummy match
-		// before the first match that copies to after 0xA000.
+		// before the first match that starts after 0xA000.
 		// Update: I actually might have figured out what these are for: the
 		// original PC decompressor might have had a 0xA000-byte decompression
 		// buffer, and these commands were for signalling that it's about to
-		// run out of room, and to allocate a bigger buffer, or maybe flush to
-		// disk.
+		// run out of room, and to allocate a bigger buffer.
 		// Still though, this is pointless to the Mega Drive.
 		if (file_pointer - file_buffer >= 0xA000 && last_src_file_index < 0xA000)
 		{
