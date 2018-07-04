@@ -21,38 +21,37 @@
 
 // Possible explanation for Mistake 5:
 
-/*
-"Hrm. I think I might have just figured out a quirk of Kosinski.
+// "Hrm. I think I might have just figured out a quirk of Kosinski.
 
-I might just be talking out of my ass, but Kosinski has some reserved 'command'
-values: Basically, if you try to do a long match with a length of 0, that marks
-the end of the file. Oddly enough, a long match with a length of 1 is also a
-reserved command, but it doesn't do anything.
+// I might just be talking out of my ass, but Kosinski has some reserved 'command'
+// values: basically, if you try to do a long match with a length of 0, that marks
+// the end of the file. Oddly enough, a long match with a length of 1 is also a
+// reserved command, but it doesn't do anything.
 
-Notably, 1-length commands are inserted whenever the decompressed data so far
-passes... I think it might have been 0x1000 bytes.
+// Notably, 1-length commands are inserted whenever the decompressed data so far
+// passes 0xA000 bytes.
 
-At the time I didn't think much of it, but just earlier today I was being hassled
-by libsndfile. It's an audio decoder that doesn't have a function to give you the
-total decompressed size of the file. Likewise, Kosinski doesn't have a header to
-tell you that either.
+// At the time I didn't think much of it, but just earlier today I was being hassled
+// by libsndfile. It's an audio decoder that doesn't have a function to give you the
+// total decompressed size of the file. Likewise, Kosinski doesn't have a header to
+// tell you that either.
 
-My problem with this was, I didn't know know big a buffer to allocate before
-calling libsndfile's decompressor. I eventually came up with the idea of allocating
-an 0x8000-byte buffer, and asking for a maximum of 0x8000 bytes. If I got 0x8000
-back, then I'd allocate another 0x8000-byte buffer, and ask for another 0x8000
-bytes, and so on.
+// My problem with this was, I didn't know know big a buffer to allocate before
+// calling libsndfile's decompressor. I eventually came up with the idea of allocating
+// an 0x8000-byte buffer, and asking for a maximum of 0x8000 bytes. If I got 0x8000
+// back, then I'd allocate another 0x8000-byte buffer, and ask for another 0x8000
+// bytes, and so on.
 
-Kosinski decompression on the MD is notable because there's no bounds checking
-or anything. There's never a reserved Kosinski decompression buffer, and Sonic
-(obviously) doesn't use a memory allocation system. It just decompresses over the
-chunk table most of the time.
+// Kosinski decompression on the MD is notable because there's no bounds checking
+// or anything. There's never a reserved Kosinski decompression buffer, and Sonic
+// (obviously) doesn't use a memory allocation system. It just decompresses over the
+// chunk table most of the time.
 
-So what if, the 1-length dummy command was actually for signalling to the original
-PC decompressor that its theoretical 0x1000-byte buffer wasn't gonna be big enough
-to hold the decompressed file, prompting it to either flush to disk, or maybe
-allocate a larger/other buffer before continuing?"
-*/
+// So what if, the 1-length dummy command was actually for signalling to the original
+// PC decompressor that its theoretical 0x1000-byte buffer wasn't gonna be big enough
+// to hold the decompressed file, prompting it to either flush to disk, or maybe
+// allocate a larger/other buffer before continuing?"
+
 
 #include "kosinski_compress.h"
 
@@ -125,16 +124,22 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 	while (file_pointer < file_buffer + file_size)
 	{
-		// Mistake 5: This is completely pointless
+		// Mistake 5: This is completely pointless.
 		// For some reason, the original compressor would insert a dummy match
-		// before the first match that copies to after 0xA000
+		// before the first match that copies to after 0xA000.
+		// Update: I actually might have figured out what these are for: the
+		// original PC decompressor might have had a 0xA000-byte decompression
+		// buffer, and these commands were for signalling that it's about to
+		// run out of room, and to allocate a bigger buffer, or maybe flush to
+		// disk.
+		// Still though, this is pointless to the Mega Drive.
 		if (file_pointer - file_buffer >= 0xA000 && last_src_file_index < 0xA000)
 		{
 			#ifdef DEBUG
-			printf("%X - Dummy terminator: %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
+			printf("%X - 0xA000 boundary flag: %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
 			#endif
 
-			// Terminator match
+			// 0xA000 boundary match
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutMatchByte(0x00);
@@ -238,7 +243,10 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	free(MemoryStream_GetBuffer(match_stream));
 	free(match_stream);
 
-	// Mistake 4: There's absolutely no reason to do this (except for Moduled Kosinski)
+	// Mistake 4: There's absolutely no reason to do this (except for Moduled Kosinski).
+	// This might have been because the original compressor's ASM output could only write
+	// exactly 0x10 values per dc.b instruction.
+
 	// Pad to 0x10
 	size_t bytes_remaining = -MemoryStream_GetIndex(output_stream) & 0xF;
 	for (unsigned int i = 0; i < bytes_remaining; ++i)
