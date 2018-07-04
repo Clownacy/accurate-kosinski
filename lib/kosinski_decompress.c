@@ -7,20 +7,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "memory_stream.h"
-
 static unsigned short descriptor;
 static int descriptor_bits_remaining;
 
 static unsigned char *in_file_pointer;
-MemoryStream *output_stream;
+
+static unsigned char *decompression_buffer;
+static unsigned char *decompression_buffer_pointer;
+static unsigned long decompression_buffer_size;
 
 static void GetDescriptor(void)
 {
 	descriptor_bits_remaining = 16;
 
-	descriptor = (in_file_pointer[1] << 8) | in_file_pointer[0];
-	in_file_pointer += 2;
+	const unsigned char byte1 = *in_file_pointer++;
+	const unsigned char byte2 = *in_file_pointer++;
+
+	descriptor = (byte2 << 8) | byte1;
 }
 
 static bool PopDescriptor(void)
@@ -37,23 +40,19 @@ static bool PopDescriptor(void)
 
 static void WriteBytes(short distance, unsigned int count)
 {
-	for (unsigned int i = 0; i < count; ++i)
-	{
-		const unsigned char byte = MemoryStream_GetBuffer(output_stream)[MemoryStream_GetIndex(output_stream) + distance];
+	unsigned char *dictionary_pointer = decompression_buffer_pointer + distance;
 
-		MemoryStream_WriteByte(output_stream, byte);
-	}
+	for (unsigned int i = 0; i < count; ++i)
+		*decompression_buffer_pointer++ = *dictionary_pointer++;
 }
 
 size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
 {	
 	in_file_pointer = in_file_buffer;
 
-	output_stream = MemoryStream_Init(0x100);
-
-	#ifdef DEBUG
-	unsigned int decomp_pointer = 0;
-	#endif
+	decompression_buffer_size = 0xA000 + 0x100;	// +0x100 to account for the copy that crossed the 0xA000 boundary
+	decompression_buffer = malloc(decompression_buffer_size);
+	decompression_buffer_pointer = decompression_buffer;
 
 	GetDescriptor();
 
@@ -68,14 +67,10 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 			const unsigned char byte = *in_file_pointer++;
 
 			#ifdef DEBUG
-			printf("%lX - Literal match: At %X, value %X\n", position, decomp_pointer, byte);
+			printf("%lX - Literal match: At %X, value %X\n", position, decompression_buffer_pointer - decompression_buffer, byte);
 			#endif
 
-			MemoryStream_WriteByte(output_stream, byte);
-
-			#ifdef DEBUG
-			++decomp_pointer;
-			#endif
+			*decompression_buffer_pointer++ = byte;
 		}
 		else if (PopDescriptor())
 		{
@@ -94,7 +89,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				count += 2;
 
 				#ifdef DEBUG
-				printf("%lX - Full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+				printf("%lX - Full match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
 				#endif
 			}
 			else
@@ -104,35 +99,32 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				if (count == 1)
 				{
 					#ifdef DEBUG
-					printf("%lX - Terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
+					printf("%lX - Terminator: At %X, src %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
 					#endif
 					break;
 				}
 				else if (count == 2)
 				{
 					#ifdef DEBUG
-					printf("%lX - 0xA000 boundary flag: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
+					printf("%lX - 0xA000 boundary flag: At %X, src %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
 					#endif
 
-					// I would use this flag for its presumable intended purpose,
-					// and increase the buffer, but MemoryStream already does a
-					// pretty good job.
+					const unsigned long index = decompression_buffer_pointer - decompression_buffer;
+					decompression_buffer_size += 0xA000;
+					decompression_buffer = realloc(decompression_buffer, decompression_buffer_size);
+					decompression_buffer_pointer = decompression_buffer + index;
 
 					continue;
 				}
 				else
 				{
 					#ifdef DEBUG
-					printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+					printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
 					#endif
 				}
 			}
 
 			WriteBytes(distance, count);
-
-			#ifdef DEBUG
-			decomp_pointer += count;
-			#endif
 		}
 		else
 		{
@@ -150,27 +142,18 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 			const short distance = 0xFF00 | *in_file_pointer++;
 
 			#ifdef DEBUG
-			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decomp_pointer, decomp_pointer + distance, count);
+			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
 			#endif
 
 			WriteBytes(distance, count);
-
-			#ifdef DEBUG
-			decomp_pointer += count;
-			#endif
 		}
 	}
 
-	const size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
-	unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
-
-	free(output_stream);
-
 	if (out_file_buffer)
-		*out_file_buffer = output_buffer;
+		*out_file_buffer = decompression_buffer;
 
 	if (out_file_size)
-		*out_file_size = output_buffer_size;
+		*out_file_size = decompression_buffer_pointer - decompression_buffer;
 
 	return in_file_pointer - in_file_buffer;
 }
