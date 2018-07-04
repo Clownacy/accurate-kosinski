@@ -111,7 +111,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				else if (count == 2)
 				{
 					#ifdef DEBUG
-					printf("%lX - Dummy terminator: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
+					printf("%lX - 0xA000 boundary flag: At %X, src %X\n", position, decomp_pointer, decomp_pointer + distance);
 					#endif
 					continue;
 				}
