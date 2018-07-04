@@ -119,7 +119,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 	unsigned char *file_pointer = file_buffer;
-	unsigned int last_src_file_index = 0;
+	unsigned long last_src_file_index = 0;
 
 	while (file_pointer < file_buffer + file_size)
 	{
@@ -131,7 +131,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		// buffer, and these commands were for signalling that it's about to
 		// run out of room, and to allocate a bigger buffer.
 		// Still though, this is pointless to the Mega Drive.
-		if (file_pointer - file_buffer >= 0xA000 && last_src_file_index < 0xA000)
+		if ((unsigned long)(file_pointer - file_buffer) / 0xA000 != last_src_file_index / 0xA000)
 		{
 			#ifdef DEBUG
 			printf("%X - 0xA000 boundary flag: %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
