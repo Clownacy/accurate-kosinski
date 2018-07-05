@@ -40,14 +40,6 @@ static bool PopDescriptor(void)
 	return result;
 }
 
-static void WriteBytes(short distance, unsigned int count)
-{
-	unsigned char *dictionary_pointer = decompression_buffer_pointer + distance;
-
-	for (unsigned int i = 0; i < count; ++i)
-		*decompression_buffer_pointer++ = *dictionary_pointer++;
-}
-
 size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
 {	
 	in_file_pointer = in_file_buffer;
@@ -74,80 +66,87 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 			*decompression_buffer_pointer++ = byte;
 		}
-		else if (PopDescriptor())
+		else
 		{
-			#ifdef DEBUG
-			const unsigned long position = in_file_pointer - in_file_buffer;
-			#endif
+			short distance;
+			unsigned int count;
 
-			const unsigned char byte1 = *in_file_pointer++;
-			const unsigned char byte2 = *in_file_pointer++;
-
-			const short distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
-			unsigned char count = byte2 & 7;
-
-			if (count)
+			if (PopDescriptor())
 			{
-				count += 2;
-
 				#ifdef DEBUG
-				printf("%lX - Full match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+				const unsigned long position = in_file_pointer - in_file_buffer;
 				#endif
-			}
-			else
-			{
-				count = *in_file_pointer++ + 1;
 
-				if (count == 1)
+				const unsigned char byte1 = *in_file_pointer++;
+				const unsigned char byte2 = *in_file_pointer++;
+
+				distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
+				count = byte2 & 7;
+
+				if (count)
 				{
-					#ifdef DEBUG
-					printf("%lX - Terminator: At %X, src %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
-					#endif
-					break;
-				}
-				else if (count == 2)
-				{
-					#ifdef DEBUG
-					printf("%lX - 0xA000 boundary flag: At %X, src %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
-					#endif
+					count += 2;
 
-					const unsigned long index = decompression_buffer_pointer - decompression_buffer;
-					decompression_buffer_size += 0xA000;
-					decompression_buffer = realloc(decompression_buffer, decompression_buffer_size);
-					decompression_buffer_pointer = decompression_buffer + index;
-
-					continue;
+					#ifdef DEBUG
+					printf("%lX - Full match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+					#endif
 				}
 				else
 				{
-					#ifdef DEBUG
-					printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
-					#endif
+					count = *in_file_pointer++ + 1;
+
+					if (count == 1)
+					{
+						#ifdef DEBUG
+						printf("%lX - Terminator: At %X, src %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
+						#endif
+						break;
+					}
+					else if (count == 2)
+					{
+						#ifdef DEBUG
+						printf("%lX - 0xA000 boundary flag: At %X, src %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
+						#endif
+
+						const unsigned long index = decompression_buffer_pointer - decompression_buffer;
+						decompression_buffer_size += 0xA000;
+						decompression_buffer = realloc(decompression_buffer, decompression_buffer_size);
+						decompression_buffer_pointer = decompression_buffer + index;
+
+						continue;
+					}
+					else
+					{
+						#ifdef DEBUG
+						printf("%lX - Extended full match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+						#endif
+					}
 				}
 			}
+			else
+			{
+				count = 2;
 
-			WriteBytes(distance, count);
-		}
-		else
-		{
-			unsigned int count = 2;
+				if (PopDescriptor())
+					count += 2;
+				if (PopDescriptor())
+					count += 1;
 
-			if (PopDescriptor())
-				count += 2;
-			if (PopDescriptor())
-				count += 1;
+				#ifdef DEBUG
+				const unsigned long position = in_file_pointer - in_file_buffer;
+				#endif
 
-			#ifdef DEBUG
-			const unsigned long position = in_file_pointer - in_file_buffer;
-			#endif
+				distance = 0xFF00 | *in_file_pointer++;
 
-			const short distance = 0xFF00 | *in_file_pointer++;
+				#ifdef DEBUG
+				printf("%lX - Inline match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+				#endif
+			}
 
-			#ifdef DEBUG
-			printf("%lX - Inline match: At %X, src %X, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
-			#endif
+			unsigned char *dictionary_pointer = decompression_buffer_pointer + distance;
 
-			WriteBytes(distance, count);
+			for (unsigned int i = 0; i < count; ++i)
+				*decompression_buffer_pointer++ = *dictionary_pointer++;
 		}
 	}
 
