@@ -1,4 +1,4 @@
-CFLAGS := -O3 -s -static -std=c11 -fomit-frame-pointer -fno-ident -Wall -Wextra -Wno-maybe-uninitialized
+CFLAGS := -O2 -s -std=c99 -fno-ident -Wall -Wextra -pedantic -Wno-maybe-uninitialized
 
 all: compare.exe kosinski_compress.exe kosinski_compress_asm.exe kosinski_decompress.exe kosinski_compress_d.exe kosinski_decompress_d.exe kosinskim_compress_d.exe kosinskim_decompress_d.exe kosinskim_compare.exe
 
