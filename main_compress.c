@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	{
 
 		unsigned char *file_buffer;
-		long int file_size;
+		long file_size;
 
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{

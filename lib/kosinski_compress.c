@@ -68,6 +68,12 @@
 
 #define TOTAL_DESCRIPTOR_BITS 16
 
+#ifdef __MINGW32__
+#define PRINTF __mingw_printf
+#else
+#define PRINTF printf
+#endif
+
 static MemoryStream *output_stream;
 static MemoryStream *match_stream;
 
@@ -134,7 +140,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		if ((unsigned long)(file_pointer - file_buffer) / 0xA000 != last_src_file_index / 0xA000)
 		{
 			#ifdef DEBUG
-			printf("%X - 0xA000 boundary flag: %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
+			PRINTF("%zX - 0xA000 boundary flag: %tX\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
 			#endif
 
 			// 0xA000 boundary match
@@ -171,7 +177,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
 			#ifdef DEBUG
-			printf("%X - Inline dictionary match found: %X, %X, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			PRINTF("%zX - Inline dictionary match found: %tX, %tX, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int length = longest_match_length - 2;
@@ -187,7 +193,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
 			#ifdef DEBUG
-			printf("%X - Full match found: %X, %X, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			PRINTF("%zX - Full match found: %tX, %tX, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
@@ -201,7 +207,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		else if (longest_match_length >= 3)
 		{
 			#ifdef DEBUG
-			printf("%X - Extended full match found: %X, %X, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
+			PRINTF("%zX - Extended full match found: %tX, %tX, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
 			#endif
 
 			const unsigned int distance = -longest_match_index;
@@ -216,7 +222,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		else
 		{
 			#ifdef DEBUG
-			printf("%X - Literal match found: %X at %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, *file_pointer, file_pointer - file_buffer);
+			PRINTF("%zX - Literal match found: %X at %tX\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, *file_pointer, file_pointer - file_buffer);
 			#endif
 
 			PutDescriptorBit(true);
@@ -225,7 +231,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	}
 
 	#ifdef DEBUG
-	printf("%X - Terminator: %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
+	PRINTF("%zX - Terminator: %tX\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer);
 	#endif
 
 	// Terminator match

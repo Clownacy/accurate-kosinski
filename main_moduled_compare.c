@@ -11,6 +11,12 @@
 
 #include "load_file_to_buffer.h"
 
+#ifdef __MINGW32__
+#define PRINTF __mingw_printf
+#else
+#define PRINTF printf
+#endif
+
 int main(int argc, char *argv[])
 {
 	for (int i = 1; i < argc; ++i)
@@ -22,7 +28,7 @@ int main(int argc, char *argv[])
 			unsigned char *uncompressed_buffer;
 			const size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer);
 
-			printf("File '%s' with size %X loaded\n", argv[i], uncompressed_size);
+			PRINTF("File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
 
 			unsigned char *compressed_buffer;
 			const long int compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer);
