@@ -1,30 +1,30 @@
 CFLAGS := -O2 -s -std=c99 -fno-ident -Wall -Wextra -pedantic -Wno-maybe-uninitialized
 
-all: compare.exe kosinski_compress.exe kosinski_compress_asm.exe kosinski_decompress.exe kosinski_compress_d.exe kosinski_decompress_d.exe kosinskim_compress_d.exe kosinskim_decompress_d.exe kosinskim_compare.exe
+all: compare kosinski_compress kosinski_compress_asm kosinski_decompress kosinski_compress_d kosinski_decompress_d kosinskim_compress_d kosinskim_decompress_d kosinskim_compare
 
-compare.exe: main_compare.c lib/kosinski_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+compare: main_compare.c lib/kosinski_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-kosinski_compress.exe: main_compress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+kosinski_compress: main_compress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-kosinski_compress_asm.exe: main_compress_asm.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+kosinski_compress_asm: main_compress_asm.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-kosinski_decompress.exe: main_decompress.c lib/kosinski_decompress.c load_file_to_buffer.c lib/memory_stream.c
+kosinski_decompress: main_decompress.c lib/kosinski_decompress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-kosinski_compress_d.exe: main_compress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+kosinski_compress_d: main_compress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinski_decompress_d.exe: main_decompress.c lib/kosinski_decompress.c load_file_to_buffer.c lib/memory_stream.c
+kosinski_decompress_d: main_decompress.c lib/kosinski_decompress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinskim_compress_d.exe: main_moduled_compress.c lib/kosinski_moduled_compress.c lib/kosinski_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+kosinskim_compress_d: main_moduled_compress.c lib/kosinski_moduled_compress.c lib/kosinski_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinskim_decompress_d.exe: main_moduled_decompress.c lib/kosinski_moduled_decompress.c lib/kosinski_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+kosinskim_decompress_d: main_moduled_decompress.c lib/kosinski_moduled_decompress.c lib/kosinski_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -DDEBUG -o $@ $^ $(LIBS)
 
-kosinskim_compare.exe: main_moduled_compare.c lib/kosinski_moduled_compress.c lib/kosinski_decompress.c lib/kosinski_moduled_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
+kosinskim_compare: main_moduled_compare.c lib/kosinski_moduled_compress.c lib/kosinski_decompress.c lib/kosinski_moduled_decompress.c lib/kosinski_compress.c load_file_to_buffer.c lib/memory_stream.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
