@@ -184,7 +184,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 			file_pointer += longest_match_length;
 		}
-		else if (longest_match_length >= 3 && longest_match_length < 10)
+		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
 			#ifdef DEBUG
 			printf("%X - Full match found: %X, %X, %X\n", MemoryStream_GetIndex(output_stream) + MemoryStream_GetIndex(match_stream) + 2, file_pointer - file_buffer, file_pointer - file_buffer - longest_match_index, longest_match_length);
