@@ -121,7 +121,7 @@ static void PutDescriptorBit(bool bit)
 	}
 }
 
-size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer)
+size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer)
 {
 	output_stream = MemoryStream_Create(0x100, false);
 	match_stream = MemoryStream_Create(0x10, true);
@@ -129,7 +129,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 	size_t file_index = 0;
-	unsigned long last_src_file_index = 0;
+	size_t last_src_file_index = 0;
 
 	while (file_index < file_size)
 	{
@@ -264,8 +264,8 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 	MemoryStream_Destroy(output_stream);
 
-	if (p_output_buffer)
-		*p_output_buffer = output_buffer;
+	if (output_buffer_pointer)
+		*output_buffer_pointer = output_buffer;
 
 	return output_buffer_size;
 }
