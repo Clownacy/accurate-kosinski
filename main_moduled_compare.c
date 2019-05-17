@@ -7,9 +7,13 @@
 
 #include "lib/kosinski_moduled_compress.h"
 #include "lib/kosinski_moduled_decompress.h"
-#include "lib/minmax.h"
 
 #include "load_file_to_buffer.h"
+
+#undef MIN
+#undef MAX
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 #ifdef __MINGW32__
 #define PRINTF __mingw_printf
