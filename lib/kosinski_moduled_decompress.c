@@ -10,7 +10,7 @@
 
 size_t KosinskiDecompressModuled(unsigned char *in_file_buffer, unsigned char **out_file_buffer)
 {
-	MemoryStream *output_stream = MemoryStream_Init(0x100);
+	MemoryStream *output_stream = MemoryStream_Create(0x100, false);
 
 	const unsigned char byte1 = *in_file_buffer++;
 	const unsigned short size = *in_file_buffer++ | (byte1 << 8);
@@ -36,10 +36,10 @@ size_t KosinskiDecompressModuled(unsigned char *in_file_buffer, unsigned char **
 	KosinskiDecompress(in_file_buffer, &out_buffer, &out_size);
 	MemoryStream_WriteBytes(output_stream, out_buffer, out_size);
 
-	const size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
+	const size_t output_buffer_size = MemoryStream_GetPosition(output_stream);
 	unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
 
-	free(output_stream);
+	MemoryStream_Destroy(output_stream);
 
 	if (out_file_buffer)
 		*out_file_buffer = output_buffer;

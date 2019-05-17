@@ -16,7 +16,7 @@ size_t KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, uns
 	}
 	else
 	{
-		MemoryStream *output_stream = MemoryStream_Init(0x100);
+		MemoryStream *output_stream = MemoryStream_Create(0x100, false);
 
 		MemoryStream_WriteByte(output_stream, file_size >> 8);
 		MemoryStream_WriteByte(output_stream, file_size & 0xFF);
@@ -35,10 +35,10 @@ size_t KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, uns
 		const size_t compressed_size = KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, &compressed_buffer);
 		MemoryStream_WriteBytes(output_stream, compressed_buffer, compressed_size);
 
-		const size_t output_buffer_size = MemoryStream_GetIndex(output_stream);
+		const size_t output_buffer_size = MemoryStream_GetPosition(output_stream);
 		unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
 
-		free(output_stream);
+		MemoryStream_Destroy(output_stream);
 
 		if (p_output_buffer)
 			*p_output_buffer = output_buffer;
