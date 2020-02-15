@@ -247,7 +247,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 	FlushData();
 
-	// Destory match_buffer
+	// Destroy match_buffer
 	MemoryStream_Destroy(match_stream);
 
 	// Mistake 4: There's absolutely no reason to do this.
