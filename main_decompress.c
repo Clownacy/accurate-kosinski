@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv)
 {
-	int success = EXIT_FAILURE;
+	int exit_code = EXIT_SUCCESS;
 
 	if (argc < 2)
 	{
@@ -35,11 +35,10 @@ int main(int argc, char **argv)
 				fwrite(out_buffer, out_size, 1, out_file);
 				free(out_buffer);
 				fclose(out_file);
-
-				success = EXIT_SUCCESS;
 			}
 			else
 			{
+				exit_code = EXIT_FAILURE;
 				printf("Could not open '%s'\n", out_filename);
 			}
 
@@ -47,9 +46,10 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			exit_code = EXIT_FAILURE;
 			printf("Could not open '%s'\n", argv[1]);
 		}
 	}
 
-	return success;
+	return exit_code;
 }

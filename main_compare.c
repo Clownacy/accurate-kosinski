@@ -23,6 +23,8 @@
 
 int main(int argc, char **argv)
 {
+	int exit_code = EXIT_SUCCESS;
+
 	for (int i = 1; i < argc; ++i)
 	{
 		unsigned char *in_file_buffer;
@@ -53,6 +55,7 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			exit_code = EXIT_FAILURE;
 			printf("Could not open '%s'\n", argv[i]);
 		}
 	}
@@ -60,4 +63,6 @@ int main(int argc, char **argv)
 #ifdef _WIN32
 	getchar();
 #endif
+
+	return exit_code;
 }
