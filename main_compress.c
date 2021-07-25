@@ -43,7 +43,6 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-
 		unsigned char *file_buffer;
 		size_t file_size;
 
