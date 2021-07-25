@@ -17,7 +17,7 @@ static const unsigned char *in_file_pointer;
 
 static unsigned char *decompression_buffer;
 static unsigned char *decompression_buffer_pointer;
-static unsigned long decompression_buffer_size;
+static size_t decompression_buffer_size;
 
 static void GetDescriptor(void)
 {
@@ -70,7 +70,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 		else
 		{
 			short distance;
-			unsigned int count;
+			size_t count;
 
 			if (PopDescriptor())
 			{
@@ -146,7 +146,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 
 			unsigned char *dictionary_pointer = decompression_buffer_pointer + distance;
 
-			for (unsigned int i = 0; i < count; ++i)
+			for (size_t i = 0; i < count; ++i)
 				*decompression_buffer_pointer++ = *dictionary_pointer++;
 		}
 	}

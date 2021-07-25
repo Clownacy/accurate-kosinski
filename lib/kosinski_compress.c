@@ -118,7 +118,7 @@ static void PutDescriptorBit(bool bit)
 	}
 }
 
-size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer)
+size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer)
 {
 	output_stream = MemoryStream_Create(0x100, false);
 	match_stream = MemoryStream_Create(0x10, true);
