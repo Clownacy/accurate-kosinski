@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 
 	if (argc < 2)
 	{
-		printf("Gimme a file, dumbass\n");
+		fputs("Gimme a file, dumbass\n", stdout);
 	}
 	else
 	{
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 			else
 			{
 				exit_code = EXIT_FAILURE;
-				printf("Could not open '%s'\n", out_filename);
+				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
 			free(in_buffer);
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 		else
 		{
 			exit_code = EXIT_FAILURE;
-			printf("Could not open '%s'\n", argv[1]);
+			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
 

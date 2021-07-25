@@ -8,12 +8,6 @@
 
 #include "load_file_to_buffer.h"
 
-#ifdef __MINGW32__
-#define FPRINTF __mingw_fprintf
-#else
-#define FPRINTF fprintf
-#endif
-
 int main(int argc, char **argv)
 {
 	int exit_code = EXIT_FAILURE;
@@ -35,7 +29,7 @@ int main(int argc, char **argv)
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
 		#ifdef DEBUG
-			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
+			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
 		#endif
 
 			unsigned char *out_buffer;
@@ -49,7 +43,7 @@ int main(int argc, char **argv)
 			{
 				size_t claimed_out_size = (out_size + 0x100) & ~0xFF;
 				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'
-				FPRINTF(out_file, "; à≥èkëO $%lx  à≥èkå„ $%zx  à≥èkó¶ %.1f%%  ÉZÉãêî %ld", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
+				fprintf(out_file, "; à≥èkëO $%lx  à≥èkå„ $%zx  à≥èkó¶ %.1f%%  ÉZÉãêî %ld", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
 
 				unsigned int index = 0;
 				for (size_t bytes_remaining = out_size; bytes_remaining != 0; bytes_remaining -= 0x10)
@@ -70,7 +64,7 @@ int main(int argc, char **argv)
 			else
 			{
 				exit_code = EXIT_FAILURE;
-				printf("Could not open '%s'\n", out_filename);
+				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
 			free(file_buffer);
@@ -78,7 +72,7 @@ int main(int argc, char **argv)
 		else
 		{
 			exit_code = EXIT_FAILURE;
-			printf("Could not open '%s'\n", argv[1]);
+			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
 

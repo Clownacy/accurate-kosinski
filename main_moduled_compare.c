@@ -15,12 +15,6 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-#ifdef __MINGW32__
-#define PRINTF __mingw_printf
-#else
-#define PRINTF printf
-#endif
-
 int main(int argc, char **argv)
 {
 	int exit_code = EXIT_SUCCESS;
@@ -34,7 +28,9 @@ int main(int argc, char **argv)
 			unsigned char *uncompressed_buffer;
 			const size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer);
 
-			PRINTF("File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
+		#ifdef DEBUG
+			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
+		#endif
 
 			unsigned char *compressed_buffer;
 			const size_t compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer);
@@ -42,12 +38,12 @@ int main(int argc, char **argv)
 			free(uncompressed_buffer);
 
 			if (in_file_size != compressed_size)
-				printf("File sizes don't match!\n");
+				fputs("File sizes don't match!\n", stdout);
 
 			if (memcmp(in_file_buffer, compressed_buffer, MIN(in_file_size, compressed_size)))
-				printf("The files don't match!\n\n");
+				fputs("The files don't match!\n\n", stdout);
 			else
-				printf("Yay the files match.\n\n");
+				fputs("Yay the files match.\n\n", stdout);
 
 			free(compressed_buffer);
 			free(in_file_buffer);
@@ -55,7 +51,7 @@ int main(int argc, char **argv)
 		else
 		{
 			exit_code = EXIT_FAILURE;
-			printf("Could not open '%s'\n", argv[i]);
+			fprintf(stderr, "Could not open '%s'\n", argv[i]);
 		}
 	}
 

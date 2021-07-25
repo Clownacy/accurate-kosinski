@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 		if (LoadFileToBuffer(argv[1], &in_buffer, &in_size))
 		{
 		#ifdef DEBUG
-			printf("File '%s' with size %lX loaded\n", argv[1], in_size);
+			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], in_size);
 		#endif
 
 			unsigned char *out_buffer;
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 			else
 			{
 				exit_code = EXIT_FAILURE;
-				printf("Could not open '%s'\n", out_filename);
+				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
 			free(in_buffer);

@@ -14,11 +14,11 @@ int main(int argc, char **argv)
 
 	if (argc < 2)
 	{
-		printf(
+		fputs(
 		"This tool compresses a supplied file in the Kosinski format. It tries to produce files accurate to Sega's original compressor.\n"
 		"Made by Clownacy.\n"
 		"\n"
-		"Usage: kosinski_compress.exe [in_file] [out_file](optional)\n"
+		"Usage: kosinski_compress.exe [in_file] [out_file](optional)\n", stdout
 		);
 	}
 	else
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
 		#ifdef DEBUG
-			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
+			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
 		#endif
 
 			unsigned char *out_buffer;
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 			else
 			{
 				exit_code = EXIT_FAILURE;
-				printf("Could not open '%s'\n", out_filename);
+				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
 			free(file_buffer);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 		else
 		{
 			exit_code = EXIT_FAILURE;
-			printf("Could not open '%s'\n", argv[1]);
+			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
 
