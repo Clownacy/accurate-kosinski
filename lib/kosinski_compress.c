@@ -177,7 +177,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		const size_t max_match_distance = MIN(file_index, MAX_MATCH_DISTANCE);
 		const size_t max_match_length = MIN(file_size - file_index, MAX_MATCH_LENGTH);
 
-		size_t longest_match_index;
+		size_t longest_match_index = 0;
 		size_t longest_match_length = 0;
 		for (size_t backsearch_index = 1; backsearch_index < max_match_distance + 1; ++backsearch_index)
 		{

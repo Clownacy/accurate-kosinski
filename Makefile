@@ -1,4 +1,4 @@
-CFLAGS := -O2 -s -std=c99 -fno-ident -Wall -Wextra -pedantic -Wno-maybe-uninitialized
+CFLAGS := -O2 -std=c99 -DNDEBUG -Wall -Wextra -pedantic
 
 all: compare kosinski_compress kosinski_compress_asm kosinski_decompress kosinski_compress_d kosinski_decompress_d kosinskim_compress_d kosinskim_decompress_d kosinskim_compare
 
