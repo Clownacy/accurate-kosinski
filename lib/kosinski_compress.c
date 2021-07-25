@@ -95,8 +95,8 @@
 
 #define TOTAL_DESCRIPTOR_BITS 16
 
-static MemoryStream *output_stream;
-static MemoryStream *match_stream;
+static MemoryStream output_stream;
+static MemoryStream match_stream;
 
 static unsigned short descriptor;
 static unsigned int descriptor_bits_remaining;
@@ -108,18 +108,18 @@ static void FlushData(void)
 	// Descriptors are stored byte-swapped, so it's possible the
 	// original compressor did this:
 	//fwrite(&descriptor, 2, 1, output_file);
-	MemoryStream_WriteByte(output_stream, descriptor & 0xFF);
-	MemoryStream_WriteByte(output_stream, descriptor >> 8);
+	MemoryStream_WriteByte(&output_stream, descriptor & 0xFF);
+	MemoryStream_WriteByte(&output_stream, descriptor >> 8);
 
-	const size_t match_buffer_size = MemoryStream_GetPosition(match_stream);
-	unsigned char *match_buffer = MemoryStream_GetBuffer(match_stream);
+	const size_t match_buffer_size = MemoryStream_GetPosition(&match_stream);
+	unsigned char *match_buffer = MemoryStream_GetBuffer(&match_stream);
 
-	MemoryStream_WriteBytes(output_stream, match_buffer, match_buffer_size);
+	MemoryStream_Write(&output_stream, match_buffer, 1, match_buffer_size);
 }
 
 static void PutMatchByte(unsigned char byte)
 {
-	MemoryStream_WriteByte(match_stream, byte);
+	MemoryStream_WriteByte(&match_stream, byte);
 }
 
 static void PutDescriptorBit(bool bit)
@@ -134,14 +134,14 @@ static void PutDescriptorBit(bool bit)
 		FlushData();
 
 		descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
-		MemoryStream_Rewind(match_stream);
+		MemoryStream_Rewind(&match_stream);
 	}
 }
 
 size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer)
 {
-	output_stream = MemoryStream_Create(0x100, false);
-	match_stream = MemoryStream_Create(0x10, true);
+	MemoryStream_Create(&output_stream, false);
+	MemoryStream_Create(&match_stream, true);
 
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
@@ -161,7 +161,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		if (file_index / 0xA000 != last_src_file_index / 0xA000)
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "%zX - 0xA000 boundary flag: %tX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index);
+			fprintf(stderr, "%zX - 0xA000 boundary flag: %tX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index);
 		#endif
 
 			// 0xA000 boundary match
@@ -198,7 +198,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "%zX - Inline dictionary match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
+			fprintf(stderr, "%zX - Inline dictionary match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
 			const size_t length = longest_match_length - 2;
@@ -214,7 +214,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "%zX - Full match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
+			fprintf(stderr, "%zX - Full match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
 			const size_t distance = -longest_match_index;
@@ -228,7 +228,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		else if (longest_match_length >= 3)
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "%zX - Extended full match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
+			fprintf(stderr, "%zX - Extended full match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
 			const size_t distance = -longest_match_index;
@@ -243,7 +243,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		else
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "%zX - Literal match found: %X at %tX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_buffer[file_index], file_index);
+			fprintf(stderr, "%zX - Literal match found: %X at %tX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_buffer[file_index], file_index);
 		#endif
 
 			PutDescriptorBit(true);
@@ -252,7 +252,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 	}
 
 #ifdef DEBUG
-	fprintf(stderr, "%zX - Terminator: %tX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index);
+	fprintf(stderr, "%zX - Terminator: %tX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index);
 #endif
 
 	// Terminator match
@@ -265,21 +265,21 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 	FlushData();
 
 	// Destroy match_buffer
-	MemoryStream_Destroy(match_stream);
+	MemoryStream_Destroy(&match_stream);
 
 	// Mistake 4: There's absolutely no reason to do this.
 	// This might have been because the original compressor's ASM output could only write
 	// exactly 0x10 values per dc.b instruction.
 
 	// Pad to 0x10
-	size_t bytes_remaining = -MemoryStream_GetPosition(output_stream) & 0xF;
+	size_t bytes_remaining = -MemoryStream_GetPosition(&output_stream) & 0xF;
 	for (size_t i = 0; i < bytes_remaining; ++i)
-		MemoryStream_WriteByte(output_stream, 0);
+		MemoryStream_WriteByte(&output_stream, 0);
 
-	const size_t output_buffer_size = MemoryStream_GetPosition(output_stream);
-	unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
+	const size_t output_buffer_size = MemoryStream_GetPosition(&output_stream);
+	unsigned char *output_buffer = MemoryStream_GetBuffer(&output_stream);
 
-	MemoryStream_Destroy(output_stream);
+	MemoryStream_Destroy(&output_stream);
 
 	if (output_buffer_pointer != NULL)
 		*output_buffer_pointer = output_buffer;

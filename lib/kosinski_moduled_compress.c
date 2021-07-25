@@ -36,10 +36,11 @@ size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_siz
 	}
 	else
 	{
-		MemoryStream *output_stream = MemoryStream_Create(0x100, false);
+		MemoryStream output_stream;
+		MemoryStream_Create(&output_stream, false);
 
-		MemoryStream_WriteByte(output_stream, file_size >> 8);
-		MemoryStream_WriteByte(output_stream, file_size & 0xFF);
+		MemoryStream_WriteByte(&output_stream, file_size >> 8);
+		MemoryStream_WriteByte(&output_stream, file_size & 0xFF);
 
 		const size_t extra_module_count = (file_size - 1) >> 12;
 
@@ -47,18 +48,18 @@ size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_siz
 		{
 			unsigned char *compressed_buffer;
 			const size_t compressed_size = KosinskiCompress(file_buffer, 0x1000, &compressed_buffer);
-			MemoryStream_WriteBytes(output_stream, compressed_buffer, compressed_size);
+			MemoryStream_Write(&output_stream, compressed_buffer, 1, compressed_size);
 			file_buffer += 0x1000;
 		}
 
 		unsigned char *compressed_buffer;
 		const size_t compressed_size = KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, &compressed_buffer);
-		MemoryStream_WriteBytes(output_stream, compressed_buffer, compressed_size);
+		MemoryStream_Write(&output_stream, compressed_buffer, 1, compressed_size);
 
-		const size_t output_buffer_size = MemoryStream_GetPosition(output_stream);
-		unsigned char *output_buffer = MemoryStream_GetBuffer(output_stream);
+		const size_t output_buffer_size = MemoryStream_GetPosition(&output_stream);
+		unsigned char *output_buffer = MemoryStream_GetBuffer(&output_stream);
 
-		MemoryStream_Destroy(output_stream);
+		MemoryStream_Destroy(&output_stream);
 
 		if (p_output_buffer != NULL)
 			*p_output_buffer = output_buffer;
