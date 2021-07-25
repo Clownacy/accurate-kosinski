@@ -143,9 +143,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		// Still though, this is pointless to the Mega Drive.
 		if (file_index / 0xA000 != last_src_file_index / 0xA000)
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			PRINTF("%zX - 0xA000 boundary flag: %tX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index);
-			#endif
+		#endif
 
 			// 0xA000 boundary match
 			PutDescriptorBit(false);
@@ -180,9 +180,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			PRINTF("%zX - Inline dictionary match found: %tX, %tX, %X\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
-			#endif
+		#endif
 
 			const unsigned int length = longest_match_length - 2;
 
@@ -196,9 +196,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		}
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			PRINTF("%zX - Full match found: %tX, %tX, %X\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
-			#endif
+		#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
@@ -210,9 +210,9 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		}
 		else if (longest_match_length >= 3)
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			PRINTF("%zX - Extended full match found: %tX, %tX, %X\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
-			#endif
+		#endif
 
 			const unsigned int distance = -longest_match_index;
 			PutDescriptorBit(false);
@@ -225,18 +225,18 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		}
 		else
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			PRINTF("%zX - Literal match found: %X at %tX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_buffer[file_index], file_index);
-			#endif
+		#endif
 
 			PutDescriptorBit(true);
 			PutMatchByte(file_buffer[file_index++]);
 		}
 	}
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	PRINTF("%zX - Terminator: %tX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index);
-	#endif
+#endif
 
 	// Terminator match
 	PutDescriptorBit(false);

@@ -29,9 +29,9 @@ int main(int argc, char *argv[])
 
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			printf("File '%s' with size %lX loaded\n", argv[1], file_size);
-			#endif
+		#endif
 
 			unsigned char *out_buffer;
 			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);

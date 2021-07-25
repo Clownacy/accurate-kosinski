@@ -60,15 +60,15 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 	{
 		if (PopDescriptor())
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			const unsigned long position = in_file_pointer - in_file_buffer;
-			#endif
+		#endif
 
 			const unsigned char byte = *in_file_pointer++;
 
-			#ifdef DEBUG
+		#ifdef DEBUG
 			PRINTF("%lX - Literal match: At %zX, value %X\n", position, decompression_buffer_pointer - decompression_buffer, byte);
-			#endif
+		#endif
 
 			*decompression_buffer_pointer++ = byte;
 		}
@@ -79,9 +79,9 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 			if (PopDescriptor())
 			{
-				#ifdef DEBUG
+			#ifdef DEBUG
 				const unsigned long position = in_file_pointer - in_file_buffer;
-				#endif
+			#endif
 
 				const unsigned char byte1 = *in_file_pointer++;
 				const unsigned char byte2 = *in_file_pointer++;
@@ -93,9 +93,9 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				{
 					count += 2;
 
-					#ifdef DEBUG
+				#ifdef DEBUG
 					PRINTF("%lX - Full match: At %tX, src %tX, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
-					#endif
+				#endif
 				}
 				else
 				{
@@ -103,16 +103,16 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 
 					if (count == 1)
 					{
-						#ifdef DEBUG
+					#ifdef DEBUG
 						PRINTF("%lX - Terminator: At %tX, src %tX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
-						#endif
+					#endif
 						break;
 					}
 					else if (count == 2)
 					{
-						#ifdef DEBUG
+					#ifdef DEBUG
 						PRINTF("%lX - 0xA000 boundary flag: At %tX, src %tX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
-						#endif
+					#endif
 
 						const unsigned long index = decompression_buffer_pointer - decompression_buffer;
 						decompression_buffer_size += 0xA000;
@@ -123,9 +123,9 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 					}
 					else
 					{
-						#ifdef DEBUG
+					#ifdef DEBUG
 						PRINTF("%lX - Extended full match: At %tX, src %tX, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
-						#endif
+					#endif
 					}
 				}
 			}
@@ -138,15 +138,15 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				if (PopDescriptor())
 					count += 1;
 
-				#ifdef DEBUG
+			#ifdef DEBUG
 				const unsigned long position = in_file_pointer - in_file_buffer;
-				#endif
+			#endif
 
 				distance = 0xFF00 | *in_file_pointer++;
 
-				#ifdef DEBUG
+			#ifdef DEBUG
 				PRINTF("%lX - Inline match: At %tX, src %tX, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
-				#endif
+			#endif
 			}
 
 			unsigned char *dictionary_pointer = decompression_buffer_pointer + distance;

@@ -29,9 +29,9 @@ int main(int argc, char *argv[])
 
 		if (LoadFileToBuffer(argv[1], &in_buffer, &in_size))
 		{
-			#ifdef DEBUG
+		#ifdef DEBUG
 			printf("File '%s' with size %lX loaded\n", argv[1], in_size);
-			#endif
+		#endif
 
 			unsigned char *out_buffer;
 			size_t out_size = KosinskiCompressModuled(in_buffer, in_size, &out_buffer);
