@@ -1,4 +1,24 @@
-// Copyright (c) 2018-2021 Clownacy
+/*
+ * zlib License
+ *
+ * (C) 2018-2021 Clownacy
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty.  In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ */
 
 #include "kosinski_decompress.h"
 
@@ -89,7 +109,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					count += 2;
 
 				#ifdef DEBUG
-					fprintf(stderr, "%lX - Full match: At %tX, src %tX, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+					fprintf(stderr, "%lX - Full match: At %tX, src %tX, len %zX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
 				#endif
 				}
 				else
@@ -119,7 +139,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					else
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - Extended full match: At %tX, src %tX, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+						fprintf(stderr, "%lX - Extended full match: At %tX, src %tX, len %zX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
 					#endif
 					}
 				}
@@ -140,7 +160,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				distance = 0xFF00 | *in_file_pointer++;
 
 			#ifdef DEBUG
-				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %X\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
+				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %zX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance, count);
 			#endif
 			}
 
