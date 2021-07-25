@@ -36,7 +36,7 @@
 // total decompressed size of the file. Likewise, Kosinski doesn't have a header to
 // tell you that either.
 
-// My problem with this was, I didn't know know big a buffer to allocate before
+// My problem with this was, I didn't know know how big a buffer to allocate before
 // calling libsndfile's decompressor. I eventually came up with the idea of allocating
 // an 0x8000-byte buffer, and asking for a maximum of 0x8000 bytes. If I got 0x8000
 // back, then I'd allocate another 0x8000-byte buffer, and ask for another 0x8000
@@ -47,7 +47,7 @@
 // (obviously) doesn't use a memory allocation system. It just decompresses over the
 // chunk table most of the time.
 
-// So what if, the 1-length dummy command was actually for signalling to the original
+// So what if the 1-length dummy command was actually for signalling to the original
 // PC decompressor that its supposedly 0xA000-byte buffer wasn't gonna be big enough
 // to hold the decompressed file, prompting it to allocate a larger buffer before
 // continuing?"
