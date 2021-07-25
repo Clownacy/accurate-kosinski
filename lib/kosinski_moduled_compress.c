@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Clownacy
+// Copyright (c) 2018-2021 Clownacy
 
 #include "kosinski_moduled_compress.h"
 
@@ -21,9 +21,9 @@ size_t KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, uns
 		MemoryStream_WriteByte(output_stream, file_size >> 8);
 		MemoryStream_WriteByte(output_stream, file_size & 0xFF);
 
-		const unsigned int extra_module_count = (file_size - 1) >> 12;
+		const size_t extra_module_count = (file_size - 1) >> 12;
 
-		for (unsigned int i = 0; i < extra_module_count; ++i)
+		for (size_t i = 0; i < extra_module_count; ++i)
 		{
 			unsigned char *compressed_buffer;
 			const size_t compressed_size = KosinskiCompress(file_buffer, 0x1000, &compressed_buffer);
@@ -40,7 +40,7 @@ size_t KosinskiCompressModuled(unsigned char *file_buffer, size_t file_size, uns
 
 		MemoryStream_Destroy(output_stream);
 
-		if (p_output_buffer)
+		if (p_output_buffer != NULL)
 			*p_output_buffer = output_buffer;
 
 		return output_buffer_size;

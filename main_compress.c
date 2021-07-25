@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Clownacy
+// Copyright (c) 2018-2021 Clownacy
 
 #include <stddef.h>
 #include <stdio.h>
@@ -8,7 +8,7 @@
 
 #include "load_file_to_buffer.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	int success = EXIT_FAILURE;
 
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	{
 
 		unsigned char *file_buffer;
-		long file_size;
+		size_t file_size;
 
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 			unsigned char *out_buffer;
 			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
 
-			char *out_filename = (argc > 2) ? argv[2] : "out.kos";
+			const char *out_filename = (argc > 2) ? argv[2] : "out.kos";
 
 			FILE *out_file = fopen(out_filename, "wb");
 

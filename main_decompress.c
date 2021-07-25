@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Clownacy
+// Copyright (c) 2018-2021 Clownacy
 
 #include <stddef.h>
 #include <stdio.h>
@@ -8,7 +8,7 @@
 
 #include "load_file_to_buffer.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	int success = EXIT_FAILURE;
 
@@ -26,11 +26,11 @@ int main(int argc, char *argv[])
 			size_t out_size;
 			KosinskiDecompress(in_buffer, &out_buffer, &out_size);
 
-			char *out_filename = (argc > 2) ? argv[2] : "out.unc";
+			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
-			if (out_file)
+			if (out_file != NULL)
 			{
 				fwrite(out_buffer, out_size, 1, out_file);
 				free(out_buffer);

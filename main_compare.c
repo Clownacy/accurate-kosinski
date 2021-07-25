@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Clownacy
+// Copyright (c) 2018-2021 Clownacy
 
 #include <stddef.h>
 #include <stdio.h>
@@ -21,12 +21,12 @@
 #define PRINTF printf
 #endif
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	for (int i = 1; i < argc; ++i)
 	{
 		unsigned char *in_file_buffer;
-		long int in_file_size;
+		size_t in_file_size;
 		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
 		{
 			unsigned char *uncompressed_buffer;
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 			PRINTF("File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
 
 			unsigned char *compressed_buffer;
-			const long int compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer);
+			const size_t compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer);
 
 			free(uncompressed_buffer);
 

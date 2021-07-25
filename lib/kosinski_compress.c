@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Clownacy
+// Copyright (c) 2018-2021 Clownacy
 
 // Sega-accurate Kosinski compressor.
 // Creates identical output to Sega's own compressor.
@@ -56,7 +56,10 @@
 #include "kosinski_compress.h"
 
 #include <stdbool.h>
-#include <stdio.h>
+#include <stddef.h>
+#ifdef DEBUG
+ #include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -67,8 +70,8 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-#define MAX_MATCH_LENGTH 0xFD				// Mistake 1: This should be 0x100
-#define MAX_MATCH_DISTANCE (0x2000 - MAX_MATCH_LENGTH)	// Mistake 2: This should just be 0x2000
+#define MAX_MATCH_LENGTH 0xFD                          //Mistake 1: This should be 0x100
+#define MAX_MATCH_DISTANCE (0x2000 - MAX_MATCH_LENGTH) // Mistake 2: This should just be 0x2000
 
 #define TOTAL_DESCRIPTOR_BITS 16
 
@@ -157,15 +160,15 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 		last_src_file_index = file_index;
 
-		const unsigned int max_match_distance = MIN(file_index, MAX_MATCH_DISTANCE);
-		const unsigned int max_match_length = MIN(file_size - file_index, MAX_MATCH_LENGTH);
+		const size_t max_match_distance = MIN(file_index, MAX_MATCH_DISTANCE);
+		const size_t max_match_length = MIN(file_size - file_index, MAX_MATCH_LENGTH);
 
-		unsigned int longest_match_index;
-		unsigned int longest_match_length = 0;
-		for (unsigned int backsearch_index = 1; backsearch_index < max_match_distance + 1; ++backsearch_index)
+		size_t longest_match_index;
+		size_t longest_match_length = 0;
+		for (size_t backsearch_index = 1; backsearch_index < max_match_distance + 1; ++backsearch_index)
 		{
 
-			unsigned int match_length = 0;
+			size_t match_length = 0;
 			while (match_length < max_match_length && file_buffer[file_index + match_length] == file_buffer[file_index - backsearch_index + match_length])
 			{
 				++match_length;
@@ -181,10 +184,10 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
 		#ifdef DEBUG
-			PRINTF("%zX - Inline dictionary match found: %tX, %tX, %X\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
+			PRINTF("%zX - Inline dictionary match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
-			const unsigned int length = longest_match_length - 2;
+			const size_t length = longest_match_length - 2;
 
 			PutDescriptorBit(false);
 			PutDescriptorBit(false);
@@ -197,10 +200,10 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
 		#ifdef DEBUG
-			PRINTF("%zX - Full match found: %tX, %tX, %X\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
+			PRINTF("%zX - Full match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
-			const unsigned int distance = -longest_match_index;
+			const size_t distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutMatchByte(distance & 0xFF);
@@ -211,10 +214,10 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 		else if (longest_match_length >= 3)
 		{
 		#ifdef DEBUG
-			PRINTF("%zX - Extended full match found: %tX, %tX, %X\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
+			PRINTF("%zX - Extended full match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(output_stream) + MemoryStream_GetPosition(match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
-			const unsigned int distance = -longest_match_index;
+			const size_t distance = -longest_match_index;
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutMatchByte(distance & 0xFF);
@@ -256,7 +259,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 	// Pad to 0x10
 	size_t bytes_remaining = -MemoryStream_GetPosition(output_stream) & 0xF;
-	for (unsigned int i = 0; i < bytes_remaining; ++i)
+	for (size_t i = 0; i < bytes_remaining; ++i)
 		MemoryStream_WriteByte(output_stream, 0);
 
 	const size_t output_buffer_size = MemoryStream_GetPosition(output_stream);
@@ -264,7 +267,7 @@ size_t KosinskiCompress(unsigned char *file_buffer, size_t file_size, unsigned c
 
 	MemoryStream_Destroy(output_stream);
 
-	if (output_buffer_pointer)
+	if (output_buffer_pointer != NULL)
 		*output_buffer_pointer = output_buffer;
 
 	return output_buffer_size;

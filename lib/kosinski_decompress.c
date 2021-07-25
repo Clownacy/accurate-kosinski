@@ -1,24 +1,25 @@
-// Copyright (c) 2018 Clownacy
+// Copyright (c) 2018-2021 Clownacy
 
 #include "kosinski_decompress.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #ifdef DEBUG
-#include <stdio.h>
+ #include <stdio.h>
 #endif
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef __MINGW32__
-#define PRINTF __mingw_printf
+ #define PRINTF __mingw_printf
 #else
-#define PRINTF printf
+ #define PRINTF printf
 #endif
 
 static unsigned short descriptor;
 static unsigned int descriptor_bits_remaining;
 
-static unsigned char *in_file_pointer;
+static const unsigned char *in_file_pointer;
 
 static unsigned char *decompression_buffer;
 static unsigned char *decompression_buffer_pointer;
@@ -46,11 +47,11 @@ static bool PopDescriptor(void)
 	return result;
 }
 
-size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
+size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
 {	
 	in_file_pointer = in_file_buffer;
 
-	decompression_buffer_size = 0xA000 + 0x100;	// +0x100 to account for the copy that crossed the 0xA000 boundary
+	decompression_buffer_size = 0xA000 + 0x100; // +0x100 to account for the copy that crossed the 0xA000 boundary
 	decompression_buffer = malloc(decompression_buffer_size);
 	decompression_buffer_pointer = decompression_buffer;
 
@@ -61,7 +62,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		if (PopDescriptor())
 		{
 		#ifdef DEBUG
-			const unsigned long position = in_file_pointer - in_file_buffer;
+			const size_t position = in_file_pointer - in_file_buffer;
 		#endif
 
 			const unsigned char byte = *in_file_pointer++;
@@ -80,7 +81,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 			if (PopDescriptor())
 			{
 			#ifdef DEBUG
-				const unsigned long position = in_file_pointer - in_file_buffer;
+				const size_t position = in_file_pointer - in_file_buffer;
 			#endif
 
 				const unsigned char byte1 = *in_file_pointer++;
@@ -89,7 +90,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 				distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
 				count = byte2 & 7;
 
-				if (count)
+				if (count != 0)
 				{
 					count += 2;
 
@@ -114,7 +115,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 						PRINTF("%lX - 0xA000 boundary flag: At %tX, src %tX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer + distance);
 					#endif
 
-						const unsigned long index = decompression_buffer_pointer - decompression_buffer;
+						const size_t index = decompression_buffer_pointer - decompression_buffer;
 						decompression_buffer_size += 0xA000;
 						decompression_buffer = realloc(decompression_buffer, decompression_buffer_size);
 						decompression_buffer_pointer = decompression_buffer + index;
@@ -139,7 +140,7 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 					count += 1;
 
 			#ifdef DEBUG
-				const unsigned long position = in_file_pointer - in_file_buffer;
+				const size_t position = in_file_pointer - in_file_buffer;
 			#endif
 
 				distance = 0xFF00 | *in_file_pointer++;
@@ -156,10 +157,10 @@ size_t KosinskiDecompress(unsigned char *in_file_buffer, unsigned char **out_fil
 		}
 	}
 
-	if (out_file_buffer)
+	if (out_file_buffer != NULL)
 		*out_file_buffer = decompression_buffer;
 
-	if (out_file_size)
+	if (out_file_size != NULL)
 		*out_file_size = decompression_buffer_pointer - decompression_buffer;
 
 	return in_file_pointer - in_file_buffer;
