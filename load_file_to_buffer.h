@@ -20,9 +20,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#pragma once
+#ifndef LOAD_FILE_TO_BUFFER_H
+#define LOAD_FILE_TO_BUFFER_H
 
 #include <stdbool.h>
 #include <stddef.h>
 
 bool LoadFileToBuffer(const char *file_name, unsigned char **file_buffer, size_t *file_size);
+
+#endif /* LOAD_FILE_TO_BUFFER_H */

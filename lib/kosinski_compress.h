@@ -20,8 +20,11 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#pragma once
+#ifndef KOSINSKI_COMPRESS_H
+#define KOSINSKI_COMPRESS_H
 
 #include <stddef.h>
 
 size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer);
+
+#endif /* KOSINSKI_COMPRESS_H */

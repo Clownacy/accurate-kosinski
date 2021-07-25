@@ -20,8 +20,11 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#pragma once
+#ifndef KOSINSKI_DECOMPRESS_H
+#define KOSINSKI_DECOMPRESS_H
 
 #include <stddef.h>
 
 size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size);
+
+#endif /* KOSINSKI_DECOMPRESS_H */
