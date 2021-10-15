@@ -149,7 +149,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				const size_t position = in_file_pointer - in_file_buffer;
 			#endif
 
-				distance = ((0xFF00 | *in_file_pointer++) ^ 0xFFFF) + 1;
+				distance = (*in_file_pointer++ ^ 0xFF) + 1;
 
 			#ifdef DEBUG
 				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
