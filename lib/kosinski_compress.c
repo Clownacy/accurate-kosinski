@@ -32,13 +32,6 @@
 // memory. The graph-theory-based algorithm Flamewing used might not have
 // been feasible on late-80s PCs.
 
-// Unfortunately, there's one bug I can't emulate: it seems the original
-// compressor would accidentally read past the end of the uncompressed
-// file, leading to the final match reading from an odd place in the
-// dictionary. This would be because, instead of searching for 0FAE66,
-// it would search for 0FAE6614 instead. Usually, the match has a 0 added
-// to the end of it, but other times it's a different number entirely.
-
 // Possible explanation for Mistake 5:
 
 // "Hrm. I think I might have just figured out a quirk of Kosinski.
@@ -90,8 +83,10 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
+#define SLIDING_WINDOW_SIZE 0x2000
+
 #define MAX_MATCH_LENGTH 0xFD                          // Mistake 1: This should be 0x100
-#define MAX_MATCH_DISTANCE (0x2000 - MAX_MATCH_LENGTH) // Mistake 2: This should just be 0x2000
+#define MAX_MATCH_DISTANCE (SLIDING_WINDOW_SIZE - MAX_MATCH_LENGTH) // Mistake 2: This should just be SLIDING_WINDOW_SIZE
 
 #define TOTAL_DESCRIPTOR_BITS 16
 
@@ -100,6 +95,13 @@ static MemoryStream match_stream;
 
 static unsigned short descriptor;
 static unsigned int descriptor_bits_remaining;
+
+// Rather than load the entire file into memory, it appears that the original
+// Kosinski compressor would stream data into a ring buffer, which matched the
+// size of the LZSS sliding window.
+// Okumura's 1989 LZSS compressor does too, so it appears that this was a common
+// technique back then.
+static unsigned char ring_buffer[SLIDING_WINDOW_SIZE];
 
 static void FlushData(void)
 {
@@ -145,6 +147,15 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
+	// Fill the ring buffer with zero. We know the original Kosinski compressor
+	// did this because of Mistake 6.
+	memset(ring_buffer, 0, sizeof(ring_buffer));
+
+	// Initialise the ring buffer with data from the file
+	for (size_t i = 0; i < MAX_MATCH_LENGTH; ++i)
+		if (i < file_size)
+			ring_buffer[i] = file_buffer[i];
+
 	size_t file_index = 0;
 	size_t last_src_file_index = 0;
 
@@ -175,15 +186,20 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		last_src_file_index = file_index;
 
 		const size_t max_match_distance = MIN(file_index, MAX_MATCH_DISTANCE);
-		const size_t max_match_length = MIN(file_size - file_index, MAX_MATCH_LENGTH);
 
 		size_t longest_match_index = 0;
 		size_t longest_match_length = 0;
 		for (size_t backsearch_index = 1; backsearch_index < max_match_distance + 1; ++backsearch_index)
 		{
-
+			// Mistake 6: `match_length` always counts up to `MAX_MATCH_LENGTH`, even if it means reading
+			// past the end of the file. Because the ring buffer isn't updated once the end of the file is
+			// reached, this results in leftover values from earlier in the file being read instead.
+			// This bug causes the final match in the file to sometimes ignore suitable nearby data in
+			// favour of data earlier in the file, even if it means using a larger match type. This is
+			// because the chosen data just so happened to be followed by the same pattern of bytes that
+			// the buggy search read from the ring buffer, while the nearby data did not.
 			size_t match_length = 0;
-			while (match_length < max_match_length && file_buffer[file_index + match_length] == file_buffer[file_index - backsearch_index + match_length])
+			while (match_length < MAX_MATCH_LENGTH && ring_buffer[(file_index + match_length) % SLIDING_WINDOW_SIZE] == ring_buffer[(file_index - backsearch_index + match_length) % SLIDING_WINDOW_SIZE])
 			{
 				++match_length;
 			}
@@ -194,6 +210,9 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 				longest_match_length = match_length;
 			}
 		}
+
+		// If the match is longer than the remainder of the file, reduce it to the proper size. See Mistake 6 for more info.
+		longest_match_length = MIN(longest_match_length, file_size - file_index);
 
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
 		{
@@ -208,8 +227,6 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			PutDescriptorBit(length & 2);
 			PutDescriptorBit(length & 1);
 			PutMatchByte(-longest_match_index);
-
-			file_index += longest_match_length;
 		}
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
@@ -222,8 +239,6 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			PutDescriptorBit(true);
 			PutMatchByte(distance & 0xFF);
 			PutMatchByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
-
-			file_index += longest_match_length;
 		}
 		else if (longest_match_length >= 3)
 		{
@@ -237,8 +252,6 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			PutMatchByte(distance & 0xFF);
 			PutMatchByte((distance >> (8 - 3)) & 0xF8);
 			PutMatchByte(longest_match_length - 1);
-
-			file_index += longest_match_length;
 		}
 		else
 		{
@@ -246,9 +259,18 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			fprintf(stderr, "%zX - Literal match found: %X at %tX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_buffer[file_index], file_index);
 		#endif
 
+			longest_match_length = 1;
+
 			PutDescriptorBit(true);
-			PutMatchByte(file_buffer[file_index++]);
+			PutMatchByte(file_buffer[file_index]);
 		}
+
+		// Update the ring buffer with bytes from the file
+		for (size_t i = 0; i < longest_match_length; ++i)
+			if (file_index + MAX_MATCH_LENGTH + i < file_size)
+				ring_buffer[(file_index + MAX_MATCH_LENGTH + i) % SLIDING_WINDOW_SIZE] = file_buffer[file_index + MAX_MATCH_LENGTH + i];
+
+		file_index += longest_match_length;
 	}
 
 #ifdef DEBUG
