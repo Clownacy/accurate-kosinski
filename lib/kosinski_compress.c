@@ -109,8 +109,8 @@ static void PutDescriptorBit(bool bit)
 
 size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer)
 {
-	MemoryStream_Create(&output_stream, false);
-	MemoryStream_Create(&match_stream, true);
+	MemoryStream_Create(&output_stream, CC_FALSE);
+	MemoryStream_Create(&match_stream, CC_TRUE);
 
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 

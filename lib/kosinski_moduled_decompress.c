@@ -31,7 +31,7 @@
 size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer)
 {
 	MemoryStream output_stream;
-	MemoryStream_Create(&output_stream, false);
+	MemoryStream_Create(&output_stream, CC_FALSE);
 
 	const unsigned char byte1 = *in_file_buffer++;
 	const size_t size = *in_file_buffer++ | (byte1 << 8);

@@ -65,7 +65,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 {	
 	in_file_pointer = in_file_buffer;
 
-	MemoryStream_Create(&decompression_buffer, false);
+	MemoryStream_Create(&decompression_buffer, CC_FALSE);
 
 	GetDescriptor();
 

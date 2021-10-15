@@ -37,7 +37,7 @@ size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_siz
 	else
 	{
 		MemoryStream output_stream;
-		MemoryStream_Create(&output_stream, false);
+		MemoryStream_Create(&output_stream, CC_FALSE);
 
 		MemoryStream_WriteByte(&output_stream, (file_size >> 8) & 0xFF);
 		MemoryStream_WriteByte(&output_stream, (file_size >> 0) & 0xFF);
