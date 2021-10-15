@@ -39,8 +39,8 @@ size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_siz
 		MemoryStream output_stream;
 		MemoryStream_Create(&output_stream, false);
 
-		MemoryStream_WriteByte(&output_stream, file_size >> 8);
-		MemoryStream_WriteByte(&output_stream, file_size & 0xFF);
+		MemoryStream_WriteByte(&output_stream, (file_size >> 8) & 0xFF);
+		MemoryStream_WriteByte(&output_stream, (file_size >> 0) & 0xFF);
 
 		const size_t extra_module_count = (file_size - 1) >> 12;
 

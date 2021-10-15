@@ -24,13 +24,13 @@
 // Creates identical output to Sega's own compressor.
 
 // Note that Sega's compressor was riddled with errors.
-// Search 'Mistake' to find my reimplementations of them.
+// Search 'Mistake' to find my reimplementations of them with explanations.
 
-// Notably, Sega's compressor used the 'longest-match' algorithm.
-// This doesn't give the best possible compression ratio, but it's fast,
-// easy to implement, and can be done without loading the entire file into
-// memory. The graph-theory-based algorithm Flamewing used might not have
-// been feasible on late-80s PCs.
+// Notably, Sega's compressor used a greedy compression algorithm.
+// This doesn't give the best possible compression ratio, but it's fast, easy to
+// implement, and can be done without loading the entire file into memory.
+// The graph-theory-based 'perfect' compression algorithm used by clownlzss and
+// mdcomp would not have been feasible on late-80s PCs.
 
 
 #include "kosinski_compress.h"
@@ -52,7 +52,7 @@
 
 #define SLIDING_WINDOW_SIZE 0x2000
 
-#define MAX_MATCH_LENGTH 0xFD                          // Mistake 1: This should be 0x100
+#define MAX_MATCH_LENGTH 0xFD                                       // Mistake 1: This should be 0x100
 #define MAX_MATCH_DISTANCE (SLIDING_WINDOW_SIZE - MAX_MATCH_LENGTH) // Mistake 2: This should just be SLIDING_WINDOW_SIZE
 
 #define TOTAL_DESCRIPTOR_BITS 16
@@ -66,22 +66,22 @@ static unsigned int descriptor_bits_remaining;
 // Rather than load the entire file into memory, it appears that the original
 // Kosinski compressor would stream data into a ring buffer, which matched the
 // size of the LZSS sliding window.
-// Okumura's 1989 LZSS compressor does too, so it appears that this was a common
-// technique back then.
+// Okumura's 1989 LZSS compressor does this too, so it appears that this was a
+// common technique back then.
 static unsigned char ring_buffer[SLIDING_WINDOW_SIZE];
 
 static void FlushData(void)
 {
 	descriptor >>= descriptor_bits_remaining;
 
-	// Descriptors are stored byte-swapped, so it's possible the
-	// original compressor did this:
+	// Descriptors are stored byte-swapped, so it's possible that the original
+	// compressor was designed for a little-endian CPU and that it did this:
 	//fwrite(&descriptor, 2, 1, output_file);
-	MemoryStream_WriteByte(&output_stream, descriptor & 0xFF);
-	MemoryStream_WriteByte(&output_stream, descriptor >> 8);
+	MemoryStream_WriteByte(&output_stream, (descriptor >> 0) & 0xFF);
+	MemoryStream_WriteByte(&output_stream, (descriptor >> 8) & 0xFF);
 
 	const size_t match_buffer_size = MemoryStream_GetPosition(&match_stream);
-	unsigned char *match_buffer = MemoryStream_GetBuffer(&match_stream);
+	const unsigned char *match_buffer = MemoryStream_GetBuffer(&match_stream);
 
 	MemoryStream_Write(&output_stream, match_buffer, 1, match_buffer_size);
 }
@@ -180,7 +180,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		// If the match is longer than the remainder of the file, reduce it to the proper size. See Mistake 6 for more info.
 		longest_match_length = MIN(longest_match_length, file_size - file_index);
 
-		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 256)	// Mistake 3: This should be '<= 256'
+		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 0x100) // Mistake 3: This should be '<= 0x100'
 		{
 		#ifdef DEBUG
 			fprintf(stderr, "%zX - Inline dictionary match found: %tX, %tX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
@@ -192,7 +192,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			PutDescriptorBit(false);
 			PutDescriptorBit(length & 2);
 			PutDescriptorBit(length & 1);
-			PutMatchByte(-longest_match_index);
+			PutMatchByte(-longest_match_index & 0xFF);
 		}
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
 		{
@@ -256,10 +256,10 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 	MemoryStream_Destroy(&match_stream);
 
 	// Mistake 4: There's absolutely no reason to do this.
-	// This might have been because the original compressor's ASM output could only write
-	// exactly 0x10 values per dc.b instruction.
+	// This might have been because the original compressor's ASM output could
+	// only write exactly 0x10 values per dc.b instruction.
 
-	// Pad to 0x10
+	// Pad to 0x10 bytes
 	size_t bytes_remaining = -MemoryStream_GetPosition(&output_stream) & 0xF;
 	for (size_t i = 0; i < bytes_remaining; ++i)
 		MemoryStream_WriteByte(&output_stream, 0);
