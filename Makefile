@@ -1,4 +1,10 @@
-CFLAGS := -O2 -std=c99 -DNDEBUG -Wall -Wextra -pedantic
+CFLAGS := -std=c99 -Wall -Wextra -pedantic -Wshift-overflow=2
+
+ifeq ($(DEBUG), 1)
+  CFLAGS := -Og -ggdb3 -fsanitize=address -fsanitize=undefined -fwrapv
+else
+  CFLAGS := -O2 -DNDEBUG
+endif
 
 all: compare kosinski_compress kosinski_compress_asm kosinski_decompress kosinski_compress_d kosinski_decompress_d kosinskim_compress_d kosinskim_decompress_d kosinskim_compare
 

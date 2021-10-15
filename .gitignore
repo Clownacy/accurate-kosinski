@@ -1,3 +1,4 @@
+# Makefile output
 /compare
 /kosinski_compress
 /kosinski_compress_asm
@@ -7,3 +8,6 @@
 /kosinskim_compare
 /kosinskim_compress_d
 /kosinskim_decompress_d
+
+# CMake build directory
+/build
