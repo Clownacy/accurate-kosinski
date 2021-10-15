@@ -59,12 +59,20 @@ int main(int argc, char **argv)
 			free(uncompressed_buffer);
 
 			if (in_file_size != compressed_size)
+			{
+				exit_code = EXIT_FAILURE;
 				fputs("File sizes don't match!\n", stdout);
+			}
 
 			if (memcmp(in_file_buffer, compressed_buffer, MIN(in_file_size, compressed_size)))
+			{
+				exit_code = EXIT_FAILURE;
 				fputs("The files don't match!\n\n", stdout);
+			}
 			else
+			{
 				fputs("Yay the files match.\n\n", stdout);
+			}
 
 			free(compressed_buffer);
 			free(in_file_buffer);
