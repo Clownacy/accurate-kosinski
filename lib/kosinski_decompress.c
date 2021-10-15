@@ -164,7 +164,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 			#endif
 			}
 
-			unsigned char *dictionary_pointer = decompression_buffer_pointer - distance;
+			const unsigned char *dictionary_pointer = decompression_buffer_pointer - distance;
 
 			for (size_t i = 0; i < count; ++i)
 				*decompression_buffer_pointer++ = *dictionary_pointer++;
