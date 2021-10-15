@@ -60,7 +60,7 @@
 static MemoryStream output_stream;
 static MemoryStream match_stream;
 
-static unsigned short descriptor;
+static unsigned int descriptor;
 static unsigned int descriptor_bits_remaining;
 
 // Rather than load the entire file into memory, it appears that the original

@@ -32,7 +32,7 @@
 
 #include "memory_stream.h"
 
-static unsigned short descriptor;
+static unsigned int descriptor;
 static unsigned int descriptor_bits_remaining;
 
 static const unsigned char *in_file_pointer;
