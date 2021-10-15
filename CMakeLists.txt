@@ -12,6 +12,11 @@ add_executable(kosinskim_compress_d "main_moduled_compress.c" "lib/kosinski_modu
 add_executable(kosinskim_decompress_d "main_moduled_decompress.c" "lib/kosinski_moduled_decompress.c" "lib/kosinski_decompress.c" "lib/kosinski_compress.c" "load_file_to_buffer.c" "lib/memory_stream.c")
 add_executable(kosinskim_compare "main_moduled_compare.c" "lib/kosinski_moduled_compress.c" "lib/kosinski_decompress.c" "lib/kosinski_moduled_decompress.c" "lib/kosinski_compress.c" "load_file_to_buffer.c" "lib/memory_stream.c")
 
+target_compile_definitions(kosinski_compress_d PRIVATE DEBUG)
+target_compile_definitions(kosinski_decompress_d PRIVATE DEBUG)
+target_compile_definitions(kosinskim_compress_d PRIVATE DEBUG)
+target_compile_definitions(kosinskim_decompress_d PRIVATE DEBUG)
+
 
 #########
 # Tests #
@@ -90,8 +95,7 @@ add_test(NAME test_sonic2_mappings_16x16_wfz_scz COMMAND compare "${CMAKE_CURREN
 add_test(NAME test_sonic2_mappings_128x128_arz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/ARZ.bin")
 add_test(NAME test_sonic2_mappings_128x128_cnz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/CNZ.bin")
 add_test(NAME test_sonic2_mappings_128x128_cpz_dez COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/CPZ_DEZ.bin")
-add_test(NAME test_sonic2_mappings_128x128_ehz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/EHZ.bin")
-add_test(NAME test_sonic2_mappings_128x128_htz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/HTZ.bin")
+add_test(NAME test_sonic2_mappings_128x128_ehz_htz COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/EHZ_HTZ.bin")
 add_test(NAME test_sonic2_mappings_128x128_mcz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/MCZ.bin")
 add_test(NAME test_sonic2_mappings_128x128_mtz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/MTZ.bin")
 add_test(NAME test_sonic2_mappings_128x128_ooz     COMMAND compare "${CMAKE_CURRENT_SOURCE_DIR}/test/Sonic 2/mappings/128x128/OOZ.bin")
