@@ -12,6 +12,11 @@ add_executable(kosinski_compress
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinski_compress PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinski_compress_asm
 	"main_compress_asm.c"
 	"lib/kosinski_compress.c"
@@ -22,6 +27,11 @@ add_executable(kosinski_compress_asm
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinski_compress_asm PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinski_decompress
 	"main_decompress.c"
 	"lib/kosinski_decompress.c"
@@ -32,6 +42,11 @@ add_executable(kosinski_decompress
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinski_decompress PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinski_compress_d
 	"main_compress.c"
 	"lib/kosinski_compress.c"
@@ -42,6 +57,11 @@ add_executable(kosinski_compress_d
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinski_compress_d PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinski_decompress_d
 	"main_decompress.c"
 	"lib/kosinski_decompress.c"
@@ -52,6 +72,11 @@ add_executable(kosinski_decompress_d
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinski_decompress_d PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinski_compare
 	"main_compare.c"
 	"lib/kosinski_decompress.c"
@@ -64,6 +89,11 @@ add_executable(kosinski_compare
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinski_compare PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinskim_compress_d
 	"main_moduled_compress.c"
 	"lib/kosinski_moduled_compress.c"
@@ -78,6 +108,11 @@ add_executable(kosinskim_compress_d
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinskim_compress_d PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinskim_decompress_d
 	"main_moduled_decompress.c"
 	"lib/kosinski_moduled_decompress.c"
@@ -92,6 +127,11 @@ add_executable(kosinskim_decompress_d
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinskim_decompress_d PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 add_executable(kosinskim_compare
 	"main_moduled_compare.c"
 	"lib/kosinski_moduled_compress.c"
@@ -108,6 +148,11 @@ add_executable(kosinskim_compare
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
 )
+set_target_properties(kosinskim_compare PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
 
 target_compile_definitions(kosinski_compress_d PRIVATE DEBUG)
 target_compile_definitions(kosinski_decompress_d PRIVATE DEBUG)
