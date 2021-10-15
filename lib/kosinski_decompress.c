@@ -30,14 +30,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory_stream.h"
+
 static unsigned short descriptor;
 static unsigned int descriptor_bits_remaining;
 
 static const unsigned char *in_file_pointer;
 
-static unsigned char *decompression_buffer;
-static unsigned char *decompression_buffer_pointer;
-static size_t decompression_buffer_size;
+static MemoryStream decompression_buffer;
 
 static void GetDescriptor(void)
 {
@@ -65,9 +65,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 {	
 	in_file_pointer = in_file_buffer;
 
-	decompression_buffer_size = 0xA000 + 0x100; // +0x100 to account for the copy that crossed the 0xA000 boundary
-	decompression_buffer = malloc(decompression_buffer_size);
-	decompression_buffer_pointer = decompression_buffer;
+	MemoryStream_Create(&decompression_buffer, false);
 
 	GetDescriptor();
 
@@ -82,10 +80,10 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 			const unsigned char byte = *in_file_pointer++;
 
 		#ifdef DEBUG
-			fprintf(stderr, "%lX - Literal match: At %zX, value %X\n", position, decompression_buffer_pointer - decompression_buffer, byte);
+			fprintf(stderr, "%lX - Literal match: At %zX, value %X\n", position, MemoryStream_GetPosition(&decompression_buffer), byte);
 		#endif
 
-			*decompression_buffer_pointer++ = byte;
+			MemoryStream_WriteByte(&decompression_buffer, byte);
 		}
 		else
 		{
@@ -109,7 +107,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					count += 2;
 
 				#ifdef DEBUG
-					fprintf(stderr, "%lX - Full match: At %tX, src %tX, len %zX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer - distance, count);
+					fprintf(stderr, "%lX - Full match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
 				#endif
 				}
 				else
@@ -119,27 +117,21 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					if (count == 1)
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - Terminator: At %tX, src %tX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer - distance);
+						fprintf(stderr, "%lX - Terminator: At %tX, src %tX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
 					#endif
 						break;
 					}
 					else if (count == 2)
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - 0xA000 boundary flag: At %tX, src %tX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer - distance);
+						fprintf(stderr, "%lX - 0xA000 boundary flag: At %tX, src %tX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
 					#endif
-
-						const size_t index = decompression_buffer_pointer - decompression_buffer;
-						decompression_buffer_size += 0xA000;
-						decompression_buffer = realloc(decompression_buffer, decompression_buffer_size);
-						decompression_buffer_pointer = decompression_buffer + index;
-
 						continue;
 					}
 					else
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - Extended full match: At %tX, src %tX, len %zX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer - distance, count);
+						fprintf(stderr, "%lX - Extended full match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
 					#endif
 					}
 				}
@@ -160,22 +152,24 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				distance = ((0xFF00 | *in_file_pointer++) ^ 0xFFFF) + 1;
 
 			#ifdef DEBUG
-				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %zX\n", position, decompression_buffer_pointer - decompression_buffer, decompression_buffer_pointer - decompression_buffer - distance, count);
+				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
 			#endif
 			}
 
-			const unsigned char *dictionary_pointer = decompression_buffer_pointer - distance;
+			const unsigned char *dictionary_pointer = MemoryStream_GetBuffer(&decompression_buffer) + MemoryStream_GetPosition(&decompression_buffer) - distance;
 
 			for (size_t i = 0; i < count; ++i)
-				*decompression_buffer_pointer++ = *dictionary_pointer++;
+				MemoryStream_WriteByte(&decompression_buffer, *dictionary_pointer++);
 		}
 	}
 
 	if (out_file_buffer != NULL)
-		*out_file_buffer = decompression_buffer;
+		*out_file_buffer = MemoryStream_GetBuffer(&decompression_buffer);
 
 	if (out_file_size != NULL)
-		*out_file_size = decompression_buffer_pointer - decompression_buffer;
+		*out_file_size = MemoryStream_GetPosition(&decompression_buffer);
+
+	MemoryStream_Destroy(&decompression_buffer);
 
 	return in_file_pointer - in_file_buffer;
 }
