@@ -2,5 +2,4 @@
 - Sonic 3 & Knuckles test suite
 - Merge the debug tools with the regular ones (make the debug prints toggleable with a '-v' or '-d' argument)
 - Maybe just merge all tools into one
-- Make a Moduled Kosinski comparison tool
 - Move (de)compressor global state to a user-allocated struct
