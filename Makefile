@@ -1,9 +1,9 @@
 CFLAGS := -std=c99 -Wall -Wextra -pedantic -Wshift-overflow=2
 
 ifeq ($(DEBUG), 1)
-  CFLAGS := -Og -ggdb3 -fsanitize=address -fsanitize=undefined -fwrapv
+  CFLAGS += -Og -ggdb3 -fsanitize=address -fsanitize=undefined -fwrapv
 else
-  CFLAGS := -O2 -DNDEBUG
+  CFLAGS += -O2 -DNDEBUG
 endif
 
 all: kosinski_compress kosinski_compress_asm kosinski_decompress kosinski_compress_d kosinski_decompress_d kosinski_compare kosinskim_compress kosinskim_decompress kosinskim_compress_d kosinskim_decompress_d kosinskim_compare
