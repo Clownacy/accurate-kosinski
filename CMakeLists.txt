@@ -374,6 +374,8 @@ add_test(NAME test_kosinski_Sonic_3K_Levels_SSZ_Chunks_Act_1_Custom COMMAND kosi
 add_test(NAME test_kosinski_Sonic_3K_Levels_SSZ_Chunks_Act_1_Primary COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/Levels/SSZ/Chunks/Act 1 Primary.bin")
 add_test(NAME test_kosinski_Sonic_3K_Levels_SSZ_Chunks_Act_1_Secondary COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/Levels/SSZ/Chunks/Act 1 Secondary.bin")
 add_test(NAME test_kosinski_Sonic_3K_Levels_SSZ_Chunks_Act_2 COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/Levels/SSZ/Chunks/Act 2.bin")
+add_test(NAME test_kosinski_Sonic_3K_sound_driver_part_1 COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/sound driver part 1.bin")
+add_test(NAME test_kosinski_Sonic_3K_sound_driver_part_2 COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/sound driver part 2.bin")
 
 add_test(NAME test_moduled_kosinski_Sonic_3K_General_Ending_KosinskiM_Art_Egg_Robo COMMAND kosinskim_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/moduled kosinski/Sonic 3 & Knuckles/General/Ending/KosinskiM Art/Egg Robo.bin")
 add_test(NAME test_moduled_kosinski_Sonic_3K_General_Ending_KosinskiM_Art_Island_Lift_Animated_Tiles COMMAND kosinskim_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/moduled kosinski/Sonic 3 & Knuckles/General/Ending/KosinskiM Art/Island Lift Animated Tiles.bin")
