@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 			unsigned char *out_buffer;
 			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
 
-			char *out_filename = (argc > 2) ? argv[2] : "out.asm";
+			const char *out_filename = (argc > 2) ? argv[2] : "out.asm";
 
 			FILE *out_file = fopen(out_filename, "w");
 

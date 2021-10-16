@@ -39,7 +39,7 @@ bool LoadFileToBuffer(const char *file_name, unsigned char **p_file_buffer, size
 		const size_t file_size = ftell(file);
 		rewind(file);
 
-		unsigned char *file_buffer = malloc(file_size);
+		unsigned char *file_buffer = (unsigned char*)malloc(file_size);
 
 		if (file_buffer != NULL)
 		{
