@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
+			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], file_size);
 		#endif
 
 			unsigned char *out_buffer;

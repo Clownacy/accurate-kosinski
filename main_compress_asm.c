@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 			{
 				size_t claimed_out_size = (out_size + 0x100) & ~0xFF;
 				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'
-				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%lx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %ld", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
+				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
 
 				unsigned int index = 0;
 				for (size_t bytes_remaining = out_size; bytes_remaining != 0; bytes_remaining -= 0x10)

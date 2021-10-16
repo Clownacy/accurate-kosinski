@@ -80,7 +80,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 			const unsigned char byte = *in_file_pointer++;
 
 		#ifdef DEBUG
-			fprintf(stderr, "%lX - Literal match: At %zX, value %X\n", position, MemoryStream_GetPosition(&decompression_buffer), byte);
+			fprintf(stderr, "%zX - Literal match: At %zX, value %X\n", position, MemoryStream_GetPosition(&decompression_buffer), byte);
 		#endif
 
 			MemoryStream_WriteByte(&decompression_buffer, byte);
@@ -108,7 +108,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					count += 2;
 
 				#ifdef DEBUG
-					fprintf(stderr, "%lX - Full match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
+					fprintf(stderr, "%zX - Full match: At %zX, src %zX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
 				#endif
 				}
 				else
@@ -118,21 +118,21 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					if (count == 1)
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - Terminator: At %tX, src %tX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
+						fprintf(stderr, "%zX - Terminator: At %zX, src %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
 					#endif
 						break;
 					}
 					else if (count == 2)
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - 0xA000 boundary flag: At %tX, src %tX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
+						fprintf(stderr, "%zX - 0xA000 boundary flag: At %zX, src %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
 					#endif
 						continue;
 					}
 					else
 					{
 					#ifdef DEBUG
-						fprintf(stderr, "%lX - Extended full match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
+						fprintf(stderr, "%zX - Extended full match: At %zX, src %zX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
 					#endif
 					}
 				}
@@ -153,7 +153,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				distance = (*in_file_pointer++ ^ 0xFF) + 1; // Convert from negative two's-complement to positive
 
 			#ifdef DEBUG
-				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
+				fprintf(stderr, "%zX - Inline match: At %zX, src %zX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
 			#endif
 			}
 
