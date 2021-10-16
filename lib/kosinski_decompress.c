@@ -99,7 +99,8 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				const unsigned char byte1 = *in_file_pointer++;
 				const unsigned char byte2 = *in_file_pointer++;
 
-				distance = ((byte1 | ((byte2 & 0xF8) << 5) | 0xE000) ^ 0xFFFF) + 1;
+				distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
+				distance = (distance ^ 0xFFFF) + 1; // Convert from negative two's-complement to positive
 				count = byte2 & 7;
 
 				if (count != 0)
@@ -149,7 +150,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				const size_t position = in_file_pointer - in_file_buffer;
 			#endif
 
-				distance = (*in_file_pointer++ ^ 0xFF) + 1;
+				distance = (*in_file_pointer++ ^ 0xFF) + 1; // Convert from negative two's-complement to positive
 
 			#ifdef DEBUG
 				fprintf(stderr, "%lX - Inline match: At %tX, src %tX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
