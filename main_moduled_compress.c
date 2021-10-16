@@ -34,11 +34,13 @@ int main(int argc, char **argv)
 
 	if (argc < 2)
 	{
-		printf(
-		"This tool compresses a supplied file in the Kosinski format. It tries to produce files accurate to Sega's original compressor.\n"
-		"Made by Clownacy.\n"
-		"\n"
-		"Usage: kosinski_compress.exe [in_file] [out_file](optional)\n"
+		fputs(
+			"This tool compresses a supplied file in the Moduled Kosinski format. It tries to produce files accurate to Sega's original compressor.\n"
+			"\n"
+			"www.github.com/Clownacy/accurate-kosinski\n"
+			"\n"
+			"Usage: kosinskim_compress [in_file] [out_file](optional)\n"
+			, stdout
 		);
 	}
 	else

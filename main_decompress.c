@@ -34,7 +34,14 @@ int main(int argc, char **argv)
 
 	if (argc < 2)
 	{
-		fputs("Gimme a file, dumbass\n", stdout);
+		fputs(
+			"This tool decompresses a supplied file that's in the Kosinski format.\n"
+			"\n"
+			"www.github.com/Clownacy/accurate-kosinski\n"
+			"\n"
+			"Usage: kosinski_decompress [in_file] [out_file](optional)\n"
+			, stdout
+		);
 	}
 	else
 	{
