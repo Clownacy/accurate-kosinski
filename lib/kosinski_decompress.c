@@ -156,10 +156,10 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 			#endif
 			}
 
-			const unsigned char *dictionary_pointer = MemoryStream_GetBuffer(&decompression_buffer) + MemoryStream_GetPosition(&decompression_buffer) - distance;
+			const size_t dictionary_index = MemoryStream_GetPosition(&decompression_buffer) - distance;
 
 			for (size_t i = 0; i < count; ++i)
-				MemoryStream_WriteByte(&decompression_buffer, *dictionary_pointer++);
+				MemoryStream_WriteByte(&decompression_buffer, MemoryStream_GetBuffer(&decompression_buffer)[dictionary_index + i]);
 		}
 	}
 
