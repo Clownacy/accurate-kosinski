@@ -204,6 +204,7 @@ target_compile_definitions(kosinskim_decompress_d PRIVATE DEBUG)
 
 enable_testing()
 
+# Kosinski files
 add_test(NAME test_kosinski_Sonic_1_artkos_Flowers_at_Ending COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 1/artkos/Flowers at Ending.bin")
 add_test(NAME test_kosinski_Sonic_1_map256_GHZ COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 1/map256/GHZ.bin")
 add_test(NAME test_kosinski_Sonic_1_map256_LZ COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 1/map256/LZ.bin")
@@ -415,6 +416,7 @@ add_test(NAME test_kosinski_Sonic_3K_Levels_SSZ_Chunks_Act_2 COMMAND kosinski_co
 add_test(NAME test_kosinski_Sonic_3K_sound_driver_part_1 COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/sound driver part 1.bin")
 add_test(NAME test_kosinski_Sonic_3K_sound_driver_part_2 COMMAND kosinski_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/kosinski/Sonic 3 & Knuckles/sound driver part 2.bin")
 
+# Moduled Kosinski files
 add_test(NAME test_moduled_kosinski_Sonic_3K_General_Ending_KosinskiM_Art_Egg_Robo COMMAND kosinskim_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/moduled kosinski/Sonic 3 & Knuckles/General/Ending/KosinskiM Art/Egg Robo.bin")
 add_test(NAME test_moduled_kosinski_Sonic_3K_General_Ending_KosinskiM_Art_Island_Lift_Animated_Tiles COMMAND kosinskim_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/moduled kosinski/Sonic 3 & Knuckles/General/Ending/KosinskiM Art/Island Lift Animated Tiles.bin")
 add_test(NAME test_moduled_kosinski_Sonic_3K_General_Ending_KosinskiM_Art_Normal_Sonic_Ending_Pose COMMAND kosinskim_compare "${CMAKE_CURRENT_SOURCE_DIR}/test/moduled kosinski/Sonic 3 & Knuckles/General/Ending/KosinskiM Art/Normal Sonic Ending Pose.bin")
