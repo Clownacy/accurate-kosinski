@@ -50,12 +50,15 @@ size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned c
 		in_file_buffer += -(in_file_buffer - in_file_base) & 0xF;
 
 		MemoryStream_Write(&output_stream, out_buffer, 1, out_size);
+
+		free(out_buffer);
 	}
 
 	unsigned char *out_buffer;
 	size_t out_size;
 	KosinskiDecompress(in_file_buffer, &out_buffer, &out_size);
 	MemoryStream_Write(&output_stream, out_buffer, 1, out_size);
+	free(out_buffer);
 
 	const size_t output_buffer_size = MemoryStream_GetPosition(&output_stream);
 	unsigned char *output_buffer = MemoryStream_GetBuffer(&output_stream);

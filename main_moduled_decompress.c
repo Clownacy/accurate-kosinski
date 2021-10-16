@@ -45,6 +45,8 @@ int main(int argc, char **argv)
 			unsigned char *out_buffer;
 			const size_t out_size = KosinskiDecompressModuled(in_buffer, &out_buffer);
 
+			free(in_buffer);
+
 			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
 			FILE *out_file = fopen(out_filename, "wb");
@@ -52,7 +54,6 @@ int main(int argc, char **argv)
 			if (out_file != NULL)
 			{
 				fwrite(out_buffer, out_size, 1, out_file);
-				free(out_buffer);
 				fclose(out_file);
 			}
 			else
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
 				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
-			free(in_buffer);
+			free(out_buffer);
 		}
 		else
 		{

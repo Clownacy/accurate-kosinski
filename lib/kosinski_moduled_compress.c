@@ -49,12 +49,14 @@ size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_siz
 			unsigned char *compressed_buffer;
 			const size_t compressed_size = KosinskiCompress(file_buffer, 0x1000, &compressed_buffer);
 			MemoryStream_Write(&output_stream, compressed_buffer, 1, compressed_size);
+			free(compressed_buffer);
 			file_buffer += 0x1000;
 		}
 
 		unsigned char *compressed_buffer;
 		const size_t compressed_size = KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, &compressed_buffer);
 		MemoryStream_Write(&output_stream, compressed_buffer, 1, compressed_size);
+		free(compressed_buffer);
 
 		const size_t output_buffer_size = MemoryStream_GetPosition(&output_stream);
 		unsigned char *output_buffer = MemoryStream_GetBuffer(&output_stream);
