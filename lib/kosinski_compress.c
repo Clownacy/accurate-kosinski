@@ -124,7 +124,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			ring_buffer[i] = file_buffer[i];
 
 	size_t file_index = 0;
-	size_t last_src_file_index = 0;
+	size_t dummy_counter = 0;
 
 	while (file_index < file_size)
 	{
@@ -135,8 +135,10 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		// Kosinski decompressor would expect this type of match to appear every
 		// 0xA000 bytes, and if it didn't, then it would bail and print an error
 		// message to the user telling them that the compressed data is corrupt.
-		if (file_index / 0xA000 != last_src_file_index / 0xA000)
+		if (dummy_counter >= 0xA000)
 		{
+			dummy_counter %= 0xA000;
+
 		#ifdef DEBUG
 			fprintf(stderr, "%zX - 0xA000 boundary flag: %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index);
 		#endif
@@ -148,8 +150,6 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
 			PutMatchByte(0x01);
 		}
-
-		last_src_file_index = file_index;
 
 		const size_t max_match_distance = MIN(file_index, MAX_MATCH_DISTANCE);
 
@@ -237,6 +237,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 				ring_buffer[(file_index + MAX_MATCH_LENGTH + i) % SLIDING_WINDOW_SIZE] = file_buffer[file_index + MAX_MATCH_LENGTH + i];
 
 		file_index += longest_match_length;
+		dummy_counter += longest_match_length;
 	}
 
 #ifdef DEBUG
