@@ -65,10 +65,10 @@ static unsigned int descriptor_bits_remaining;
 
 // Rather than load the entire file into memory, it appears that the original
 // Kosinski compressor would stream data into a ring buffer, which matched the
-// size of the LZSS sliding window.
+// size of the LZSS sliding window (plus room for a little spill buffer).
 // Okumura's 1989 LZSS compressor does this too, so it appears that this was a
 // common technique back then.
-static unsigned char ring_buffer[SLIDING_WINDOW_SIZE];
+static unsigned char ring_buffer[SLIDING_WINDOW_SIZE + MAX_MATCH_LENGTH - 1];
 
 static void FlushData(void)
 {
@@ -119,9 +119,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 	memset(ring_buffer, 0, sizeof(ring_buffer));
 
 	// Initialise the ring buffer with data from the file
-	for (size_t i = 0; i < MAX_MATCH_LENGTH; ++i)
-		if (i < file_size)
-			ring_buffer[i] = file_buffer[i];
+	memcpy(ring_buffer, file_buffer, MIN(file_size, MAX_MATCH_LENGTH));
 
 	size_t file_index = 0;
 	size_t dummy_counter = 0;
@@ -165,7 +163,9 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			// because the chosen data just so happened to be followed by the same pattern of bytes that
 			// the buggy search read from the ring buffer, while the nearby data did not.
 			size_t match_length = 0;
-			while (match_length < MAX_MATCH_LENGTH && ring_buffer[(file_index + match_length) % SLIDING_WINDOW_SIZE] == ring_buffer[(file_index - backsearch_index + match_length) % SLIDING_WINDOW_SIZE])
+			const unsigned char *current_data = &ring_buffer[file_index % SLIDING_WINDOW_SIZE];
+			const unsigned char *previous_data = &ring_buffer[(file_index - backsearch_index) % SLIDING_WINDOW_SIZE];
+			while (match_length < MAX_MATCH_LENGTH && *current_data++ == *previous_data++)
 			{
 				++match_length;
 			}
@@ -233,8 +233,27 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 
 		// Update the ring buffer with bytes from the file
 		for (size_t i = 0; i < longest_match_length; ++i)
-			if (file_index + MAX_MATCH_LENGTH + i < file_size)
-				ring_buffer[(file_index + MAX_MATCH_LENGTH + i) % SLIDING_WINDOW_SIZE] = file_buffer[file_index + MAX_MATCH_LENGTH + i];
+		{
+			const size_t read_index = file_index + MAX_MATCH_LENGTH + i;
+
+			// Don't read past the end of the file
+			if (read_index >= file_size)
+			{
+				break;
+			}
+			else
+			{
+				const unsigned char byte = file_buffer[read_index];
+				const size_t ring_buffer_index = read_index % SLIDING_WINDOW_SIZE;
+
+				ring_buffer[ring_buffer_index] = byte;
+
+				// Read into a little spill buffer, so that string comparisons
+				// don't have to wrap back around to the start of the ring buffer
+				if (ring_buffer_index < MAX_MATCH_LENGTH - 1)
+					ring_buffer[SLIDING_WINDOW_SIZE + ring_buffer_index] = byte;
+			}
+		}
 
 		file_index += longest_match_length;
 		dummy_counter += longest_match_length;
