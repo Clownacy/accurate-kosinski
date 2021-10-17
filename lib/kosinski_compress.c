@@ -151,6 +151,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 
 		const size_t max_match_distance = MIN(file_index, MAX_MATCH_DISTANCE);
 
+		// Search backwards for previous occurances of the current data
 		size_t longest_match_index = 0;
 		size_t longest_match_length = 0;
 		for (size_t backsearch_index = 1; backsearch_index < max_match_distance + 1; ++backsearch_index)
@@ -180,12 +181,14 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		// If the match is longer than the remainder of the file, reduce it to the proper size. See Mistake 6 for more info.
 		longest_match_length = MIN(longest_match_length, file_size - file_index);
 
+		// Select the optimal encoding for the current match
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 0x100) // Mistake 3: This should be '<= 0x100'
 		{
 		#ifdef DEBUG
 			fprintf(stderr, "%zX - Inline dictionary match found: %zX, %zX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
+			// Short distance, shortest length
 			const size_t length = longest_match_length - 2;
 
 			PutDescriptorBit(false);
@@ -200,7 +203,9 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			fprintf(stderr, "%zX - Full match found: %zX, %zX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
+			// Long distance, short length
 			const size_t distance = -longest_match_index;
+
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutMatchByte(distance & 0xFF);
@@ -212,7 +217,9 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			fprintf(stderr, "%zX - Extended full match found: %zX, %zX, %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_index, file_index - longest_match_index, longest_match_length);
 		#endif
 
+			// Long distance, long length
 			const size_t distance = -longest_match_index;
+
 			PutDescriptorBit(false);
 			PutDescriptorBit(true);
 			PutMatchByte(distance & 0xFF);
@@ -225,6 +232,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			fprintf(stderr, "%zX - Literal match found: %X at %zX\n", MemoryStream_GetPosition(&output_stream) + MemoryStream_GetPosition(&match_stream) + 2, file_buffer[file_index], file_index);
 		#endif
 
+			// Match was too small to encode; do a literal match instead
 			longest_match_length = 1;
 
 			PutDescriptorBit(true);
