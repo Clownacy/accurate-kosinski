@@ -114,12 +114,14 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
-	// Fill the ring buffer with zero. We know the original Kosinski compressor
-	// did this because of Mistake 6.
-	memset(ring_buffer, 0, sizeof(ring_buffer));
+	size_t read_index = MIN(file_size, MAX_MATCH_LENGTH);
 
 	// Initialise the ring buffer with data from the file
-	memcpy(ring_buffer, file_buffer, MIN(file_size, MAX_MATCH_LENGTH));
+	memcpy(ring_buffer, file_buffer, read_index);
+
+	// Fill the remainder of the ring buffer with zero. We know the original
+	// Kosinski compressor did this because of Mistake 6.
+	memset(ring_buffer + read_index, 0, sizeof(ring_buffer) - read_index);
 
 	size_t file_index = 0;
 	size_t dummy_counter = 0;
@@ -240,27 +242,17 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		}
 
 		// Update the ring buffer with bytes from the file
-		for (size_t i = 0; i < longest_match_length; ++i)
+		for (size_t i = 0; i < longest_match_length && read_index < file_size; ++i, ++read_index)
 		{
-			const size_t read_index = file_index + MAX_MATCH_LENGTH + i;
+			const unsigned char byte = file_buffer[read_index];
+			const size_t ring_buffer_index = read_index % SLIDING_WINDOW_SIZE;
 
-			// Don't read past the end of the file
-			if (read_index >= file_size)
-			{
-				break;
-			}
-			else
-			{
-				const unsigned char byte = file_buffer[read_index];
-				const size_t ring_buffer_index = read_index % SLIDING_WINDOW_SIZE;
+			ring_buffer[ring_buffer_index] = byte;
 
-				ring_buffer[ring_buffer_index] = byte;
-
-				// Read into a little spill buffer, so that string comparisons
-				// don't have to wrap back around to the start of the ring buffer
-				if (ring_buffer_index < MAX_MATCH_LENGTH - 1)
-					ring_buffer[SLIDING_WINDOW_SIZE + ring_buffer_index] = byte;
-			}
+			// Read into a little spill buffer, so that string comparisons
+			// don't have to wrap back around to the start of the ring buffer
+			if (ring_buffer_index < MAX_MATCH_LENGTH - 1)
+				ring_buffer[SLIDING_WINDOW_SIZE + ring_buffer_index] = byte;
 		}
 
 		file_index += longest_match_length;
