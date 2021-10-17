@@ -119,8 +119,8 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 	// Initialise the ring buffer with data from the file
 	memcpy(ring_buffer, file_buffer, read_index);
 
-	// Fill the remainder of the ring buffer with zero. We know the original
-	// Kosinski compressor did this because of Mistake 6.
+	// Fill the remainder of the ring buffer with zero. We know that
+	// the original Kosinski compressor did this because of Mistake 6.
 	memset(ring_buffer + read_index, 0, sizeof(ring_buffer) - read_index);
 
 	size_t file_index = 0;
