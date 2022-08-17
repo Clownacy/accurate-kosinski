@@ -30,7 +30,7 @@
 
 int main(int argc, char **argv)
 {
-	int exit_code = EXIT_FAILURE;
+	int exit_code = EXIT_SUCCESS;
 
 	if (argc < 2)
 	{
