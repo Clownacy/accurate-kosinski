@@ -84,9 +84,5 @@ int main(int argc, char **argv)
 		}
 	}
 
-#ifdef _WIN32
-	getchar();
-#endif
-
 	return exit_code;
 }

@@ -24,7 +24,8 @@
 #define KOSINSKI_DECOMPRESS_H
 
 #include <stddef.h>
+#include <clowncommon.h>
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size);
+EXPORTS size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size);
 
 #endif /* KOSINSKI_DECOMPRESS_H */

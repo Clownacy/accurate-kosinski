@@ -24,7 +24,8 @@
 #define KOSINSKI_MODULED_COMPRESS_H
 
 #include <stddef.h>
+#include <clowncommon.h>
 
-size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer);
+EXPORTS size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer);
 
 #endif /* KOSINSKI_MODULED_COMPRESS_H */

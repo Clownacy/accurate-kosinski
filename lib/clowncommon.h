@@ -36,4 +36,9 @@ enum
 #define CC_CLAMP(x, min, max) (CC_MIN((max), CC_MAX((min), (x))))
 #define CC_COUNT_OF(array) (sizeof(array) / sizeof(*array))
 
+#ifdef _WIN32
+#define EXPORTS __declspec( dllexport )
+#else
+#define EXPORTS extern
+#endif
 #endif /* CLOWNCOMMON_H */

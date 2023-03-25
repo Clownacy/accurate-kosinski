@@ -24,7 +24,8 @@
 #define KOSINSKI_COMPRESS_H
 
 #include <stddef.h>
+#include <clowncommon.h>
 
-size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer);
+EXPORTS size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer);
 
 #endif /* KOSINSKI_COMPRESS_H */
