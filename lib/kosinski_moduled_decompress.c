@@ -28,7 +28,7 @@
 #include "kosinski_decompress.h"
 #include "memory_stream.h"
 
-size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer)
+EXPORTS size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer)
 {
 	MemoryStream output_stream;
 	MemoryStream_Create(&output_stream, CC_FALSE);

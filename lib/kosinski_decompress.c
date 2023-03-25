@@ -61,7 +61,7 @@ static bool PopDescriptor(void)
 	return result;
 }
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
+EXPORTS size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size)
 {	
 	in_file_pointer = in_file_buffer;
 
