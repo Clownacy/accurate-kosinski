@@ -2,194 +2,170 @@ cmake_minimum_required(VERSION 3.21)
 
 project(accurate-kosinski LANGUAGES C)
 
-add_executable(kosinski-compress
-	"main_compress.c"
+add_library(kosinski-compressor STATIC
 	"lib/kosinski_compress.c"
 	"lib/kosinski_compress.h"
-	"load_file_to_buffer.c"
-	"load_file_to_buffer.h"
 	"lib/memory_stream.c"
 	"lib/memory_stream.h"
 	"lib/clowncommon.h"
+)
+set_target_properties(kosinski-compressor PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
+add_library(kosinski-decompressor STATIC
+	"lib/kosinski_decompress.c"
+	"lib/kosinski_decompress.h"
+	"lib/memory_stream.c"
+	"lib/memory_stream.h"
+	"lib/clowncommon.h"
+)
+set_target_properties(kosinski-decompressor PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+
+add_library(kosinskim-compressor STATIC
+	"lib/kosinski_moduled_compress.c"
+	"lib/kosinski_moduled_compress.h"
+)
+set_target_properties(kosinskim-compressor PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+target_link_libraries(kosinskim-compressor PRIVATE kosinski-compressor)
+
+add_library(kosinskim-decompressor STATIC
+	"lib/kosinski_moduled_decompress.c"
+	"lib/kosinski_moduled_decompress.h"
+)
+set_target_properties(kosinskim-decompressor PROPERTIES
+	C_STANDARD 99
+	C_EXTENSIONS OFF
+)
+target_link_libraries(kosinskim-decompressor PRIVATE kosinski-decompressor)
+
+add_executable(kosinski-compress
+	"main_compress.c"
+	"load_file_to_buffer.c"
+	"load_file_to_buffer.h"
 )
 set_target_properties(kosinski-compress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-compress PRIVATE kosinski-compressor)
 
 add_executable(kosinski-compress-asm
 	"main_compress_asm.c"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-compress-asm PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-compress-asm PRIVATE kosinski-compressor)
 
 add_executable(kosinski-decompress
 	"main_decompress.c"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-decompress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-decompress PRIVATE kosinski-decompressor)
 
 add_executable(kosinski-compress-d
 	"main_compress.c"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-compress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-compress-d PRIVATE kosinski-compressor)
 
 add_executable(kosinski-decompress-d
 	"main_decompress.c"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-decompress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-decompress-d PRIVATE kosinski-decompressor)
 
 add_executable(kosinski-compare
 	"main_compare.c"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-compare PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-compare PRIVATE kosinski-compressor kosinski-decompressor)
 
 add_executable(kosinskim-compress-d
 	"main_moduled_compress.c"
-	"lib/kosinski_moduled_compress.c"
-	"lib/kosinski_moduled_compress.h"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinskim-compress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinskim-compress-d PRIVATE kosinskim-compressor)
 
 add_executable(kosinskim-decompress
 	"main_moduled_decompress.c"
-	"lib/kosinski_moduled_decompress.c"
-	"lib/kosinski_moduled_decompress.h"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinskim-decompress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinskim-decompress PRIVATE kosinskim-decompressor)
 
 add_executable(kosinskim-compress
 	"main_moduled_compress.c"
-	"lib/kosinski_moduled_compress.c"
-	"lib/kosinski_moduled_compress.h"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinskim-compress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinskim-compress PRIVATE kosinskim-compressor)
 
 add_executable(kosinskim-decompress-d
 	"main_moduled_decompress.c"
-	"lib/kosinski_moduled_decompress.c"
-	"lib/kosinski_moduled_decompress.h"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinskim-decompress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinskim-decompress-d PRIVATE kosinskim-decompressor)
 
 add_executable(kosinskim-compare
 	"main_moduled_compare.c"
-	"lib/kosinski_moduled_compress.c"
-	"lib/kosinski_moduled_compress.h"
-	"lib/kosinski_decompress.c"
-	"lib/kosinski_decompress.h"
-	"lib/kosinski_moduled_decompress.c"
-	"lib/kosinski_moduled_decompress.h"
-	"lib/kosinski_compress.c"
-	"lib/kosinski_compress.h"
 	"load_file_to_buffer.c"
 	"load_file_to_buffer.h"
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinskim-compare PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinskim-compare PRIVATE kosinskim-compressor kosinskim-decompressor)
 
 
 target_compile_definitions(kosinski-compress-d PRIVATE DEBUG)
