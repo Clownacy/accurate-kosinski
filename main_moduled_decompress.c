@@ -43,7 +43,13 @@ int main(int argc, char **argv)
 		if (LoadFileToBuffer(argv[1], &in_buffer, NULL))
 		{
 			unsigned char *out_buffer;
-			const size_t out_size = KosinskiDecompressModuled(in_buffer, &out_buffer);
+			const size_t out_size = KosinskiDecompressModuled(in_buffer, &out_buffer,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 			free(in_buffer);
 

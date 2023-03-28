@@ -16,8 +16,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef KOSINSKI_MODULED_COMPRESS_H
 #define KOSINSKI_MODULED_COMPRESS_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
-size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer);
+size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer, bool print_debug_messages);
 
 #endif /* KOSINSKI_MODULED_COMPRESS_H */

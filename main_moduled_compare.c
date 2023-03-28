@@ -39,14 +39,26 @@ int main(int argc, char **argv)
 		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
 		{
 			unsigned char *uncompressed_buffer;
-			const size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer);
+			const size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 		#ifdef DEBUG
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
 		#endif
 
 			unsigned char *compressed_buffer;
-			const size_t compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer);
+			const size_t compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 			free(uncompressed_buffer);
 

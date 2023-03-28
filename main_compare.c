@@ -40,14 +40,26 @@ int main(int argc, char **argv)
 		{
 			unsigned char *uncompressed_buffer;
 			size_t uncompressed_size;
-			KosinskiDecompress(in_file_buffer, &uncompressed_buffer, &uncompressed_size);
+			KosinskiDecompress(in_file_buffer, &uncompressed_buffer, &uncompressed_size,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 		#ifdef DEBUG
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
 		#endif
 
 			unsigned char *compressed_buffer;
-			const size_t compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer);
+			const size_t compressed_size = KosinskiCompress(uncompressed_buffer, uncompressed_size, &compressed_buffer,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 			free(uncompressed_buffer);
 

@@ -44,7 +44,13 @@ int main(int argc, char **argv)
 		{
 			unsigned char *out_buffer;
 			size_t out_size;
-			KosinskiDecompress(in_buffer, &out_buffer, &out_size);
+			KosinskiDecompress(in_buffer, &out_buffer, &out_size,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 

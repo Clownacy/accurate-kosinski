@@ -16,8 +16,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef KOSINSKI_COMPRESS_H
 #define KOSINSKI_COMPRESS_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
-size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer);
+size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer, bool print_debug_messages);
 
 #endif /* KOSINSKI_COMPRESS_H */

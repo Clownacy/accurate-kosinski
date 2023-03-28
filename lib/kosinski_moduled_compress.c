@@ -15,13 +15,14 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski_moduled_compress.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
 #include "kosinski_compress.h"
 #include "memory_stream.h"
 
-size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer)
+size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, unsigned char **p_output_buffer, bool print_debug_messages)
 {
 	if (file_size > 0xFFFF)
 	{
@@ -40,14 +41,14 @@ size_t KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_siz
 		for (size_t i = 0; i < extra_module_count; ++i)
 		{
 			unsigned char *compressed_buffer;
-			const size_t compressed_size = KosinskiCompress(file_buffer, 0x1000, &compressed_buffer);
+			const size_t compressed_size = KosinskiCompress(file_buffer, 0x1000, &compressed_buffer, print_debug_messages);
 			MemoryStream_Write(&output_stream, compressed_buffer, 1, compressed_size);
 			free(compressed_buffer);
 			file_buffer += 0x1000;
 		}
 
 		unsigned char *compressed_buffer;
-		const size_t compressed_size = KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, &compressed_buffer);
+		const size_t compressed_size = KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, &compressed_buffer, print_debug_messages);
 		MemoryStream_Write(&output_stream, compressed_buffer, 1, compressed_size);
 		free(compressed_buffer);
 

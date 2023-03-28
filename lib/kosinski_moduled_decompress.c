@@ -15,13 +15,14 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski_moduled_decompress.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
 #include "kosinski_decompress.h"
 #include "memory_stream.h"
 
-size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer)
+size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, bool print_debug_messages)
 {
 	MemoryStream output_stream;
 	MemoryStream_Create(&output_stream, CC_FALSE);
@@ -39,7 +40,7 @@ size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned c
 	{
 		unsigned char *out_buffer;
 		size_t out_size;
-		in_file_buffer += KosinskiDecompress(in_file_buffer, &out_buffer, &out_size);
+		in_file_buffer += KosinskiDecompress(in_file_buffer, &out_buffer, &out_size, print_debug_messages);
 		in_file_buffer += -(in_file_buffer - in_file_base) & 0xF;
 
 		MemoryStream_Write(&output_stream, out_buffer, 1, out_size);
@@ -49,7 +50,7 @@ size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned c
 
 	unsigned char *out_buffer;
 	size_t out_size;
-	KosinskiDecompress(in_file_buffer, &out_buffer, &out_size);
+	KosinskiDecompress(in_file_buffer, &out_buffer, &out_size, print_debug_messages);
 	MemoryStream_Write(&output_stream, out_buffer, 1, out_size);
 	free(out_buffer);
 

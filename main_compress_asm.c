@@ -49,7 +49,13 @@ int main(int argc, char **argv)
 		#endif
 
 			unsigned char *out_buffer;
-			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer);
+			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer,
+			#ifdef DEBUG
+				true
+			#else
+				false
+			#endif
+			);
 
 			const char *out_filename = (argc > 2) ? argv[2] : "out.asm";
 

@@ -16,8 +16,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef KOSINSKI_MODULED_DECOMPRESS_H
 #define KOSINSKI_MODULED_DECOMPRESS_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
-size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer);
+size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, bool print_debug_messages);
 
 #endif /* KOSINSKI_MODULED_DECOMPRESS_H */
