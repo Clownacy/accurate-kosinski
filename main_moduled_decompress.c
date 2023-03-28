@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -20,6 +20,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "lib/kosinski_moduled_decompress.h"
 
 #include "load_file_to_buffer.h"
+
+static void WriteByte(void* const user_data, const unsigned int byte)
+{
+	fputc(byte, (FILE*)user_data);
+}
 
 int main(int argc, char **argv)
 {
@@ -42,24 +47,20 @@ int main(int argc, char **argv)
 
 		if (LoadFileToBuffer(argv[1], &in_buffer, NULL))
 		{
-			unsigned char *out_buffer;
-			const size_t out_size = KosinskiDecompressModuled(in_buffer, &out_buffer,
-			#ifdef DEBUG
-				true
-			#else
-				false
-			#endif
-			);
-
-			free(in_buffer);
-
 			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
 			if (out_file != NULL)
 			{
-				fwrite(out_buffer, out_size, 1, out_file);
+				KosinskiDecompressModuled(in_buffer, WriteByte, out_file,
+				#ifdef DEBUG
+					true
+				#else
+					false
+				#endif
+				);
+
 				fclose(out_file);
 			}
 			else
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
 				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
-			free(out_buffer);
+			free(in_buffer);
 		}
 		else
 		{

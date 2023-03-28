@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -30,6 +30,10 @@ static const unsigned char *in_file_pointer;
 
 static MemoryStream decompression_buffer;
 
+#define SLIDING_WINDOW_SIZE 0x2000
+static unsigned char backsearch_buffer[SLIDING_WINDOW_SIZE];
+static size_t write_position;
+
 static void GetDescriptor(void)
 {
 	descriptor_bits_remaining = 16;
@@ -52,11 +56,15 @@ static bool PopDescriptor(void)
 	return result;
 }
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **out_file_buffer, size_t *out_file_size, bool print_debug_information)
+static void WriteByte(const unsigned int byte, void (* const write_byte)(void *user_data, unsigned int byte), const void *user_data)
+{
+	write_byte((void*)user_data, byte);
+	backsearch_buffer[write_position++ % SLIDING_WINDOW_SIZE] = byte;
+}
+
+size_t KosinskiDecompress(const unsigned char *in_file_buffer, void (* const write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_information)
 {	
 	in_file_pointer = in_file_buffer;
-
-	MemoryStream_Create(&decompression_buffer, CC_FALSE);
 
 	GetDescriptor();
 
@@ -69,9 +77,9 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 			const unsigned char byte = *in_file_pointer++;
 
 			if (print_debug_information)
-				fprintf(stderr, "%zX - Literal match: At %zX, value %X\n", position, MemoryStream_GetPosition(&decompression_buffer), byte);
+				fprintf(stderr, "%zX - Literal match: At %zX, value %X\n", position, write_position, byte);
 
-			MemoryStream_WriteByte(&decompression_buffer, byte);
+			WriteByte(byte, write_byte, user_data);
 		}
 		else
 		{
@@ -94,7 +102,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					count += 2;
 
 					if (print_debug_information)
-						fprintf(stderr, "%zX - Full match: At %zX, src %zX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
+						fprintf(stderr, "%zX - Full match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
 				}
 				else
 				{
@@ -103,21 +111,21 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 					if (count == 1)
 					{
 						if (print_debug_information)
-							fprintf(stderr, "%zX - Terminator: At %zX, src %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
+							fprintf(stderr, "%zX - Terminator: At %zX, src %zX\n", position, write_position, write_position - distance);
 
 						break;
 					}
 					else if (count == 2)
 					{
 						if (print_debug_information)
-							fprintf(stderr, "%zX - 0xA000 boundary flag: At %zX, src %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance);
+							fprintf(stderr, "%zX - 0xA000 boundary flag: At %zX, src %zX\n", position, write_position, write_position - distance);
 
 						continue;
 					}
 					else
 					{
 						if (print_debug_information)
-							fprintf(stderr, "%zX - Extended full match: At %zX, src %zX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
+							fprintf(stderr, "%zX - Extended full match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
 					}
 				}
 			}
@@ -135,23 +143,13 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, unsigned char **o
 				distance = (*in_file_pointer++ ^ 0xFF) + 1; // Convert from negative two's-complement to positive
 
 				if (print_debug_information)
-					fprintf(stderr, "%zX - Inline match: At %zX, src %zX, len %zX\n", position, MemoryStream_GetPosition(&decompression_buffer), MemoryStream_GetPosition(&decompression_buffer) - distance, count);
+					fprintf(stderr, "%zX - Inline match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
 			}
 
-			const size_t dictionary_index = MemoryStream_GetPosition(&decompression_buffer) - distance;
-
 			for (size_t i = 0; i < count; ++i)
-				MemoryStream_WriteByte(&decompression_buffer, MemoryStream_GetBuffer(&decompression_buffer)[dictionary_index + i]);
+				WriteByte(backsearch_buffer[(write_position - distance) % SLIDING_WINDOW_SIZE], write_byte, user_data);
 		}
 	}
-
-	if (out_file_buffer != NULL)
-		*out_file_buffer = MemoryStream_GetBuffer(&decompression_buffer);
-
-	if (out_file_size != NULL)
-		*out_file_size = MemoryStream_GetPosition(&decompression_buffer);
-
-	MemoryStream_Destroy(&decompression_buffer);
 
 	return in_file_pointer - in_file_buffer;
 }

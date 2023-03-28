@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -20,6 +20,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "lib/kosinski_moduled_compress.h"
 #include "lib/kosinski_moduled_decompress.h"
+#include "lib/memory_stream.h"
 
 #include "load_file_to_buffer.h"
 
@@ -27,6 +28,13 @@ PERFORMANCE OF THIS SOFTWARE.
 #undef MAX
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+static MemoryStream uncompressed_buffer;
+
+static void DecompressWriteByte(void* const user_data, const unsigned int byte)
+{
+	MemoryStream_WriteByte((MemoryStream*)user_data, byte);
+}
 
 int main(int argc, char **argv)
 {
@@ -38,8 +46,9 @@ int main(int argc, char **argv)
 		size_t in_file_size;
 		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
 		{
-			unsigned char *uncompressed_buffer;
-			const size_t uncompressed_size = KosinskiDecompressModuled(in_file_buffer, &uncompressed_buffer,
+			MemoryStream_Create(&uncompressed_buffer, CC_TRUE);
+
+			KosinskiDecompressModuled(in_file_buffer, DecompressWriteByte, &uncompressed_buffer,
 			#ifdef DEBUG
 				true
 			#else
@@ -48,11 +57,11 @@ int main(int argc, char **argv)
 			);
 
 		#ifdef DEBUG
-			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], uncompressed_size);
+			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], MemoryStream_GetPosition(&uncompressed_buffer));
 		#endif
 
 			unsigned char *compressed_buffer;
-			const size_t compressed_size = KosinskiCompressModuled(uncompressed_buffer, uncompressed_size, &compressed_buffer,
+			const size_t compressed_size = KosinskiCompressModuled(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), &compressed_buffer,
 			#ifdef DEBUG
 				true
 			#else
@@ -60,7 +69,7 @@ int main(int argc, char **argv)
 			#endif
 			);
 
-			free(uncompressed_buffer);
+			MemoryStream_Destroy(&uncompressed_buffer);
 
 			if (in_file_size != compressed_size)
 				fputs("File sizes don't match!\n", stdout);
