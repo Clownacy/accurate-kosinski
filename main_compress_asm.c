@@ -22,7 +22,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "load_file_to_buffer.h"
 #include "memory_stream.h"
 
-// TODO: Don't use a memory stream: just write directly to the file from the callback.
 static MemoryStream memory_stream;
 
 static void WriteByte(void* const user_data, const unsigned int byte)
