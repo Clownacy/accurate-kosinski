@@ -20,7 +20,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 
 #include "kosinski_decompress.h"
-#include "memory_stream.h"
 
 size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
 {

@@ -34,8 +34,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "memory_stream.h"
-
 #undef MIN
 #undef MAX
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))

@@ -18,9 +18,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 
 #include "lib/kosinski_compress.h"
-#include "lib/memory_stream.h"
 
 #include "load_file_to_buffer.h"
+#include "memory_stream.h"
 
 // TODO: Don't use a memory stream: just write directly to the file from the callback.
 static MemoryStream memory_stream;

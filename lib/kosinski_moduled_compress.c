@@ -20,7 +20,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 
 #include "kosinski_compress.h"
-#include "memory_stream.h"
 
 void KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
 {

@@ -8,8 +8,9 @@ project(accurate-kosinski LANGUAGES C)
 #############
 
 add_library(memory-stream STATIC
-	"lib/memory_stream.c"
-	"lib/memory_stream.h"
+	"clowncommon.h"
+	"memory_stream.c"
+	"memory_stream.h"
 )
 set_target_properties(memory-stream PROPERTIES
 	C_STANDARD 99
@@ -28,18 +29,15 @@ set_target_properties(load-file-to-buffer PROPERTIES
 add_library(kosinski-compressor STATIC
 	"lib/kosinski_compress.c"
 	"lib/kosinski_compress.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-compressor PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-compressor PRIVATE memory-stream)
 
 add_library(kosinski-decompressor STATIC
 	"lib/kosinski_decompress.c"
 	"lib/kosinski_decompress.h"
-	"lib/clowncommon.h"
 )
 set_target_properties(kosinski-decompressor PROPERTIES
 	C_STANDARD 99
@@ -98,7 +96,7 @@ set_target_properties(kosinski-compress-asm PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-compress-asm PRIVATE load-file-to-buffer kosinski-compressor)
+target_link_libraries(kosinski-compress-asm PRIVATE load-file-to-buffer memory-stream kosinski-compressor)
 
 add_executable(kosinskim-compress
 	"main_moduled_compress.c"

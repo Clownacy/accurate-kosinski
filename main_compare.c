@@ -20,9 +20,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "lib/kosinski_compress.h"
 #include "lib/kosinski_decompress.h"
-#include "lib/memory_stream.h"
 
 #include "load_file_to_buffer.h"
+#include "memory_stream.h"
 
 #undef MIN
 #undef MAX
