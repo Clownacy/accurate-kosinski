@@ -21,14 +21,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "memory_stream.h"
-
 static unsigned int descriptor;
 static unsigned int descriptor_bits_remaining;
 
 static const unsigned char *in_file_pointer;
-
-static MemoryStream decompression_buffer;
 
 #define SLIDING_WINDOW_SIZE 0x2000
 static unsigned char backsearch_buffer[SLIDING_WINDOW_SIZE];
