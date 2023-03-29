@@ -8,7 +8,7 @@ project(accurate-kosinski LANGUAGES C)
 #############
 
 add_library(memory-stream STATIC
-	"clowncommon.h"
+	"clowncommon/clowncommon.h"
 	"memory-stream.c"
 	"memory-stream.h"
 )

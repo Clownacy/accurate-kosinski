@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
 		#endif
 
-			MemoryStream_Create(&memory_stream, CC_TRUE);
+			MemoryStream_Create(&memory_stream, cc_true);
 
 			KosinskiCompress(file_buffer, file_size, WriteByte, &memory_stream,
 			#ifdef DEBUG

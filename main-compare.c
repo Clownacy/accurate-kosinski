@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 		size_t in_file_size;
 		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
 		{
-			MemoryStream_Create(&uncompressed_buffer, CC_TRUE);
+			MemoryStream_Create(&uncompressed_buffer, cc_true);
 
 			KosinskiDecompress(in_file_buffer, WriteByte, &uncompressed_buffer,
 			#ifdef DEBUG
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], MemoryStream_GetPosition(&uncompressed_buffer));
 		#endif
 
-			MemoryStream_Create(&compressed_buffer, CC_TRUE);
+			MemoryStream_Create(&compressed_buffer, cc_true);
 
 			KosinskiCompress(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), WriteByte, &compressed_buffer,
 			#ifdef DEBUG
