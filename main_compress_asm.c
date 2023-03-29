@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -18,8 +18,17 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 
 #include "lib/kosinski_compress.h"
+#include "lib/memory_stream.h"
 
 #include "load_file_to_buffer.h"
+
+// TODO: Don't use a memory stream: just write directly to the file from the callback.
+static MemoryStream memory_stream;
+
+static void WriteByte(void* const user_data, const unsigned int byte)
+{
+	MemoryStream_WriteByte((MemoryStream*)user_data, byte);
+}
 
 int main(int argc, char **argv)
 {
@@ -48,8 +57,9 @@ int main(int argc, char **argv)
 			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
 		#endif
 
-			unsigned char *out_buffer;
-			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer,
+			MemoryStream_Create(&memory_stream, CC_TRUE);
+
+			KosinskiCompress(file_buffer, file_size, WriteByte, &memory_stream,
 			#ifdef DEBUG
 				true
 			#else
@@ -57,12 +67,17 @@ int main(int argc, char **argv)
 			#endif
 			);
 
+			free(file_buffer);
+
 			const char *out_filename = (argc > 2) ? argv[2] : "out.asm";
 
 			FILE *out_file = fopen(out_filename, "w");
 
 			if (out_file != NULL)
 			{
+				const unsigned char* const out_buffer = MemoryStream_GetBuffer(&memory_stream);
+				const size_t out_size = MemoryStream_GetPosition(&memory_stream);
+
 				size_t claimed_out_size = (out_size + 0x100) & ~0xFF;
 				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'
 				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
@@ -80,7 +95,6 @@ int main(int argc, char **argv)
 					}
 				}
 
-				free(out_buffer);
 				fclose(out_file);
 			}
 			else
@@ -89,7 +103,7 @@ int main(int argc, char **argv)
 				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
 
-			free(file_buffer);
+			MemoryStream_Destroy(&memory_stream);
 		}
 		else
 		{

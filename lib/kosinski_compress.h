@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -19,6 +19,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdbool.h>
 #include <stddef.h>
 
-size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer, bool print_debug_messages);
+void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages);
 
 #endif /* KOSINSKI_COMPRESS_H */

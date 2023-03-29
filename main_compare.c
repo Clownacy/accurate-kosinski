@@ -30,8 +30,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 static MemoryStream uncompressed_buffer;
+static MemoryStream compressed_buffer;
 
-static void DecompressWriteByte(void* const user_data, const unsigned int byte)
+static void WriteByte(void* const user_data, const unsigned int byte)
 {
 	MemoryStream_WriteByte((MemoryStream*)user_data, byte);
 }
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
 		{
 			MemoryStream_Create(&uncompressed_buffer, CC_TRUE);
 
-			KosinskiDecompress(in_file_buffer, DecompressWriteByte, &uncompressed_buffer,
+			KosinskiDecompress(in_file_buffer, WriteByte, &uncompressed_buffer,
 			#ifdef DEBUG
 				true
 			#else
@@ -60,8 +61,9 @@ int main(int argc, char **argv)
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], MemoryStream_GetPosition(&uncompressed_buffer));
 		#endif
 
-			unsigned char *compressed_buffer;
-			const size_t compressed_size = KosinskiCompress(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), &compressed_buffer,
+			MemoryStream_Create(&compressed_buffer, CC_TRUE);
+
+			KosinskiCompress(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), WriteByte, &compressed_buffer,
 			#ifdef DEBUG
 				true
 			#else
@@ -71,13 +73,13 @@ int main(int argc, char **argv)
 
 			MemoryStream_Destroy(&uncompressed_buffer);
 
-			if (in_file_size != compressed_size)
+			if (in_file_size != MemoryStream_GetPosition(&compressed_buffer))
 			{
 				exit_code = EXIT_FAILURE;
 				fputs("File sizes don't match!\n", stdout);
 			}
 
-			if (memcmp(in_file_buffer, compressed_buffer, MIN(in_file_size, compressed_size)))
+			if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&compressed_buffer), MIN(in_file_size, MemoryStream_GetPosition(&compressed_buffer))))
 			{
 				exit_code = EXIT_FAILURE;
 				fputs("The files don't match!\n\n", stdout);
@@ -87,7 +89,7 @@ int main(int argc, char **argv)
 				fputs("Yay the files match.\n\n", stdout);
 			}
 
-			free(compressed_buffer);
+			MemoryStream_Destroy(&compressed_buffer);
 			free(in_file_buffer);
 		}
 		else

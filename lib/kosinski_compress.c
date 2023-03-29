@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -53,7 +53,7 @@ PERFORMANCE OF THIS SOFTWARE.
 static unsigned char match_buffer[MATCH_BUFFER_SIZE];
 static size_t match_buffer_index;
 
-static MemoryStream output_stream;
+static size_t output_position;
 
 static unsigned int descriptor;
 static unsigned int descriptor_bits_remaining;
@@ -65,17 +65,20 @@ static unsigned int descriptor_bits_remaining;
 // common technique back then.
 static unsigned char ring_buffer[SLIDING_WINDOW_SIZE + MAX_MATCH_LENGTH - 1];
 
-static void FlushData(void)
+static void FlushData(void (*write_byte)(void *user_data, unsigned int byte), const void *user_data)
 {
 	descriptor >>= descriptor_bits_remaining;
 
 	// Descriptors are stored byte-swapped, so it's possible that the original
 	// compressor was designed for a little-endian CPU and that it did this:
 	//fwrite(&descriptor, 2, 1, output_file);
-	MemoryStream_WriteByte(&output_stream, (descriptor >> 0) & 0xFF);
-	MemoryStream_WriteByte(&output_stream, (descriptor >> 8) & 0xFF);
+	for (unsigned int i = 0; i < TOTAL_DESCRIPTOR_BITS / 8; ++i)
+		write_byte((void*)user_data, (descriptor >> (i * 8)) & 0xFF);
 
-	MemoryStream_Write(&output_stream, match_buffer, 1, match_buffer_index);
+	for (size_t i = 0; i < match_buffer_index; ++i)
+		write_byte((void*)user_data, match_buffer[i]);
+
+	output_position += TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
 
 static void PutMatchByte(unsigned char byte)
@@ -83,7 +86,7 @@ static void PutMatchByte(unsigned char byte)
 	match_buffer[match_buffer_index++] = byte;
 }
 
-static void PutDescriptorBit(bool bit)
+static void PutDescriptorBit(bool bit, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data)
 {
 	descriptor >>= 1;
 
@@ -92,22 +95,21 @@ static void PutDescriptorBit(bool bit)
 
 	if (--descriptor_bits_remaining == 0)
 	{
-		FlushData();
+		FlushData(write_byte, user_data);
 
 		descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
-		match_buffer_index = 0;
+		match_buffer_index = 0; // TODO: Move this to `FlushData`.
 	}
 }
 
 static size_t GetOutputPosition(void)
 {
-	return MemoryStream_GetPosition(&output_stream) + TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
+	return output_position + TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
 
-size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsigned char **output_buffer_pointer, bool print_debug_messages)
+void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
 {
-	MemoryStream_Create(&output_stream, CC_FALSE);
-
+	output_position = 0;
 	match_buffer_index = 0;
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
@@ -140,8 +142,8 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 				fprintf(stderr, "%zX - 0xA000 boundary flag: %zX\n", GetOutputPosition(), file_index);
 
 			// 0xA000 boundary match
-			PutDescriptorBit(false);
-			PutDescriptorBit(true);
+			PutDescriptorBit(false, write_byte, user_data);
+			PutDescriptorBit(true, write_byte, user_data);
 			PutMatchByte(0x00);
 			PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
 			PutMatchByte(0x01);
@@ -188,10 +190,10 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			// Short distance, shortest length
 			const size_t length = longest_match_length - 2;
 
-			PutDescriptorBit(false);
-			PutDescriptorBit(false);
-			PutDescriptorBit(length & 2);
-			PutDescriptorBit(length & 1);
+			PutDescriptorBit(false, write_byte, user_data);
+			PutDescriptorBit(false, write_byte, user_data);
+			PutDescriptorBit(length & 2, write_byte, user_data);
+			PutDescriptorBit(length & 1, write_byte, user_data);
 			PutMatchByte(-longest_match_index & 0xFF);
 		}
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
@@ -202,8 +204,8 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			// Long distance, short length
 			const size_t distance = -longest_match_index;
 
-			PutDescriptorBit(false);
-			PutDescriptorBit(true);
+			PutDescriptorBit(false, write_byte, user_data);
+			PutDescriptorBit(true, write_byte, user_data);
 			PutMatchByte(distance & 0xFF);
 			PutMatchByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
 		}
@@ -215,8 +217,8 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			// Long distance, long length
 			const size_t distance = -longest_match_index;
 
-			PutDescriptorBit(false);
-			PutDescriptorBit(true);
+			PutDescriptorBit(false, write_byte, user_data);
+			PutDescriptorBit(true, write_byte, user_data);
 			PutMatchByte(distance & 0xFF);
 			PutMatchByte((distance >> (8 - 3)) & 0xF8);
 			PutMatchByte(longest_match_length - 1);
@@ -229,7 +231,7 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 			// Match was too small to encode; do a literal match instead
 			longest_match_length = 1;
 
-			PutDescriptorBit(true);
+			PutDescriptorBit(true, write_byte, user_data);
 			PutMatchByte(file_buffer[file_index]);
 		}
 
@@ -255,30 +257,20 @@ size_t KosinskiCompress(const unsigned char *file_buffer, size_t file_size, unsi
 		fprintf(stderr, "%zX - Terminator: %zX\n", GetOutputPosition(), file_index);
 
 	// Terminator match
-	PutDescriptorBit(false);
-	PutDescriptorBit(true);
+	PutDescriptorBit(false, write_byte, user_data);
+	PutDescriptorBit(true, write_byte, user_data);
 	PutMatchByte(0x00);
 	PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
 	PutMatchByte(0x00);
 
-	FlushData();
+	FlushData(write_byte, user_data);
 
 	// Mistake 4: There's absolutely no reason to do this.
 	// This might have been because the original compressor's ASM output could
 	// only write exactly 0x10 values per dc.b instruction.
 
 	// Pad to 0x10 bytes
-	size_t bytes_remaining = -MemoryStream_GetPosition(&output_stream) & 0xF;
+	size_t bytes_remaining = (0 - output_position) & 0xF;
 	for (size_t i = 0; i < bytes_remaining; ++i)
-		MemoryStream_WriteByte(&output_stream, 0);
-
-	const size_t output_buffer_size = MemoryStream_GetPosition(&output_stream);
-	unsigned char *output_buffer = MemoryStream_GetBuffer(&output_stream);
-
-	MemoryStream_Destroy(&output_stream);
-
-	if (output_buffer_pointer != NULL)
-		*output_buffer_pointer = output_buffer;
-
-	return output_buffer_size;
+		write_byte((void*)user_data, 0);
 }

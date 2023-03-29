@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -20,6 +20,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "lib/kosinski_compress.h"
 
 #include "load_file_to_buffer.h"
+
+static void WriteByte(void* const user_data, const unsigned int byte)
+{
+	fputc(byte, (FILE*)user_data);
+}
 
 int main(int argc, char **argv)
 {
@@ -47,23 +52,20 @@ int main(int argc, char **argv)
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], file_size);
 		#endif
 
-			unsigned char *out_buffer;
-			size_t out_size = KosinskiCompress(file_buffer, file_size, &out_buffer,
-			#ifdef DEBUG
-				true
-			#else
-				false
-			#endif
-			);
-
 			const char *out_filename = (argc > 2) ? argv[2] : "out.kos";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
 			if (out_file != NULL)
 			{
-				fwrite(out_buffer, out_size, 1, out_file);
-				free(out_buffer);
+				KosinskiCompress(file_buffer, file_size, WriteByte, out_file,
+				#ifdef DEBUG
+					true
+				#else
+					false
+				#endif
+				);
+
 				fclose(out_file);
 			}
 			else
