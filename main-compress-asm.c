@@ -17,10 +17,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lib/kosinski_compress.h"
+#include "lib/kosinski-compress.h"
 
-#include "load_file_to_buffer.h"
-#include "memory_stream.h"
+#include "load-file-to-buffer.h"
+#include "memory-stream.h"
 
 static MemoryStream memory_stream;
 

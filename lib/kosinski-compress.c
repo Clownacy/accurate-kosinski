@@ -26,7 +26,7 @@ PERFORMANCE OF THIS SOFTWARE.
 // mdcomp would not have been feasible on late-80s PCs.
 
 
-#include "kosinski_compress.h"
+#include "kosinski-compress.h"
 
 #include <stdbool.h>
 #include <stddef.h>

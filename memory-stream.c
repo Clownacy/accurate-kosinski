@@ -13,7 +13,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "memory_stream.h"
+#include "memory-stream.h"
 
 #include <assert.h>
 #include <stddef.h>

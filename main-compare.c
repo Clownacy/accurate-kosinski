@@ -18,11 +18,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/kosinski_compress.h"
-#include "lib/kosinski_decompress.h"
+#include "lib/kosinski-compress.h"
+#include "lib/kosinski-decompress.h"
 
-#include "load_file_to_buffer.h"
-#include "memory_stream.h"
+#include "load-file-to-buffer.h"
+#include "memory-stream.h"
 
 #undef MIN
 #undef MAX

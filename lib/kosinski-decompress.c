@@ -13,7 +13,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "kosinski_decompress.h"
+#include "kosinski-decompress.h"
 
 #include <stdbool.h>
 #include <stddef.h>

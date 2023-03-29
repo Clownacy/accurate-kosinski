@@ -13,13 +13,13 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "kosinski_moduled_decompress.h"
+#include "kosinski-moduled-decompress.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "kosinski_decompress.h"
+#include "kosinski-decompress.h"
 
 size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
 {

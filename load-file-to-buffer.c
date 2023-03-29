@@ -13,7 +13,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "load_file_to_buffer.h"
+#include "load-file-to-buffer.h"
 
 #include <stdbool.h>
 #include <stddef.h>

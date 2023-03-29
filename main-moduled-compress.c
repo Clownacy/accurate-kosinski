@@ -17,9 +17,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lib/kosinski_moduled_decompress.h"
+#include "lib/kosinski-moduled-compress.h"
 
-#include "load_file_to_buffer.h"
+#include "load-file-to-buffer.h"
 
 static void WriteByte(void* const user_data, const unsigned int byte)
 {
@@ -33,27 +33,33 @@ int main(int argc, char **argv)
 	if (argc < 2)
 	{
 		fputs(
-			"This tool decompresses a supplied file that's in the Moduled Kosinski format.\n"
+			"This tool compresses a supplied file in the Moduled Kosinski format. It tries to produce files accurate to Sega's original compressor.\n"
 			"\n"
 			"www.github.com/Clownacy/accurate-kosinski\n"
 			"\n"
-			"Usage: kosinskim_decompress [in_file] [out_file](optional)\n"
+			"Usage: kosinskim_compress [in_file] [out_file](optional)\n"
 			, stdout
 		);
 	}
 	else
 	{
-		unsigned char *in_buffer;
 
-		if (LoadFileToBuffer(argv[1], &in_buffer, NULL))
+		unsigned char *in_buffer;
+		size_t in_size;
+
+		if (LoadFileToBuffer(argv[1], &in_buffer, &in_size))
 		{
-			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
+		#ifdef DEBUG
+			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], in_size);
+		#endif
+
+			const char *out_filename = (argc > 2) ? argv[2] : "out.kosm";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
 			if (out_file != NULL)
 			{
-				KosinskiDecompressModuled(in_buffer, WriteByte, out_file,
+				KosinskiCompressModuled(in_buffer, in_size, WriteByte, out_file,
 				#ifdef DEBUG
 					true
 				#else
@@ -74,7 +80,7 @@ int main(int argc, char **argv)
 		else
 		{
 			exit_code = EXIT_FAILURE;
-			fprintf(stderr, "Could not open '%s'\n", argv[1]);
+			printf("Could not open '%s'\n", argv[1]);
 		}
 	}
 

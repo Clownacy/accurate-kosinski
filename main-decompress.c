@@ -17,9 +17,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lib/kosinski_decompress.h"
+#include "lib/kosinski-decompress.h"
 
-#include "load_file_to_buffer.h"
+#include "load-file-to-buffer.h"
 
 static void WriteByte(void* const user_data, const unsigned int byte)
 {
