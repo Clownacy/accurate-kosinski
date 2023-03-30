@@ -6,5 +6,5 @@ Included are basic frontends for a compressor, a decompressor, and a comparison
 utility.
 
 Sega's compressor had a fair few bugs, causing it to produce files with
-sub-optimal compression ratios. Lucky, none of these issues harm the integrity
-of the compressed data. See `lib/kosinski_compress.c` for more info.
+a sub-optimal compression ratio. Lucky, none of these issues harm the integrity
+of the compressed data. See `lib/kosinski-compress.c` for more info.
