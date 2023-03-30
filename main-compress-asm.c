@@ -107,11 +107,11 @@ int main(int argc, char **argv)
 				size_t claimed_out_size = out_size + ((0 - out_size) % 0x100);
 				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'.
 				// A 'cell' is what we call a 'tile'. This suggests that Kosinski was intended for compressing tiles, rather than any other kind of data.
-				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100.0f, file_size / (8 * 8 / 2));
+				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd\n", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100.0f, file_size / (8 * 8 / 2));
 
 				for (size_t i = 0; i < out_size; i += 0x10)
 				{
-					fprintf(out_file, "\n	dc.b	$%.2x", *out_pointer++);
+					fprintf(out_file, "	dc.b	$%.2x", *out_pointer++);
 
 					unsigned int j = 1;
 
@@ -120,6 +120,8 @@ int main(int argc, char **argv)
 
 					for (; j < 0x10; ++j)
 						fputs(",$00", out_file);
+
+					fputc('\n', out_file);
 				}
 
 				fclose(out_file);
