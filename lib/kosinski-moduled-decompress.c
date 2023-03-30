@@ -23,7 +23,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #define MODULE_SIZE 0x1000
 
-size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
+size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages)
 {
 	const unsigned int raw_size = ((unsigned int)in_file_buffer[0] << 8) | in_file_buffer[1];
 	const unsigned int size = raw_size == 0xA000 ? 0x8000 : raw_size;
@@ -32,7 +32,7 @@ size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, void (*wri
 
 	for (unsigned int i = 0; i < size; i += MODULE_SIZE)
 	{
-		const size_t bytes_read = KosinskiDecompress(in_file_pointer, write_byte, user_data, print_debug_messages);
+		const size_t bytes_read = KosinskiDecompress(in_file_pointer, callbacks, print_debug_messages);
 		in_file_pointer += bytes_read + ((0 - bytes_read) % 0x10);
 	}
 

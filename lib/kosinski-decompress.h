@@ -19,6 +19,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdbool.h>
 #include <stddef.h>
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_information);
+typedef struct KosinskiDecompressCallbacks
+{
+	const void *user_data;
+	void (*write_byte)(void *user_data, unsigned int byte);
+} KosinskiDecompressCallbacks;
+
+size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_information);
 
 #endif /* KOSINSKI_DECOMPRESS_H */

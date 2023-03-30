@@ -54,7 +54,11 @@ int main(int argc, char **argv)
 		{
 			MemoryStream_Create(&uncompressed_buffer, cc_true);
 
-			KosinskiDecompressModuled(in_file_buffer, WriteByte, &uncompressed_buffer,
+			KosinskiDecompressCallbacks callbacks;
+			callbacks.user_data = &uncompressed_buffer;
+			callbacks.write_byte = WriteByte;
+
+			KosinskiDecompressModuled(in_file_buffer, &callbacks,
 			#ifdef DEBUG
 				true
 			#else

@@ -63,7 +63,11 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				KosinskiDecompress(in_buffer, WriteByte, out_file,
+				KosinskiDecompressCallbacks callbacks;
+				callbacks.user_data = out_file;
+				callbacks.write_byte = WriteByte;
+
+				KosinskiDecompress(in_buffer, &callbacks,
 				#ifdef DEBUG
 					true
 				#else

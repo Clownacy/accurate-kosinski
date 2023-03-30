@@ -52,13 +52,13 @@ static bool PopDescriptor(void)
 	return result;
 }
 
-static void WriteByte(const unsigned int byte, void (* const write_byte)(void *user_data, unsigned int byte), const void *user_data)
+static void WriteByte(const unsigned int byte, const KosinskiDecompressCallbacks* const callbacks)
 {
-	write_byte((void*)user_data, byte);
+	callbacks->write_byte((void*)callbacks->user_data, byte);
 	backsearch_buffer[write_position++ % SLIDING_WINDOW_SIZE] = byte;
 }
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, void (* const write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_information)
+size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_information)
 {	
 	in_file_pointer = in_file_buffer;
 
@@ -75,7 +75,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, void (* const wri
 			if (print_debug_information)
 				fprintf(stderr, "%zX - Literal match: At %zX, value %X\n", position, write_position, byte);
 
-			WriteByte(byte, write_byte, user_data);
+			WriteByte(byte, callbacks);
 		}
 		else
 		{
@@ -143,7 +143,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, void (* const wri
 			}
 
 			for (size_t i = 0; i < count; ++i)
-				WriteByte(backsearch_buffer[(write_position - distance) % SLIDING_WINDOW_SIZE], write_byte, user_data);
+				WriteByte(backsearch_buffer[(write_position - distance) % SLIDING_WINDOW_SIZE], callbacks);
 		}
 	}
 
