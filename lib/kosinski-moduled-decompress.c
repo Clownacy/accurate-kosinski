@@ -58,8 +58,10 @@ void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, boo
 	for (unsigned int i = 0; i < size; i += MODULE_SIZE)
 	{
 		KosinskiDecompress(&new_callbacks, print_debug_messages);
-		
-		for (unsigned int j = 0; j < (0 - callbacks_and_counter.read_position) % 0x10; ++j)
+
+		const unsigned int padding_bytes = (0 - callbacks_and_counter.read_position) % 0x10;
+
+		for (unsigned int j = 0; j < padding_bytes; ++j)
 			new_callbacks.read_byte((void*)new_callbacks.read_byte_user_data);
 	}
 }
