@@ -2,3 +2,4 @@
 - Merge the debug tools with the regular ones (make the debug prints toggleable with a '-v' or '-d' argument)
 - Maybe just merge all tools into one
 - Move (de)compressor global state to a user-allocated struct
+- Add test files from the various Sonic prototypes
