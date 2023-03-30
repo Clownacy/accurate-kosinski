@@ -13,7 +13,7 @@ add_library(memory-stream STATIC
 	"memory-stream.h"
 )
 set_target_properties(memory-stream PROPERTIES
-	C_STANDARD 99
+	C_STANDARD 90
 	C_EXTENSIONS OFF
 )
 
