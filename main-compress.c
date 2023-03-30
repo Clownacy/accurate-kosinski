@@ -68,7 +68,11 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				KosinskiCompress(file_buffer, file_size, WriteByte, out_file,
+				KosinskiCompressCallbacks callbacks;
+				callbacks.user_data = out_file;
+				callbacks.write_byte = WriteByte;
+
+				KosinskiCompress(file_buffer, file_size, &callbacks,
 				#ifdef DEBUG
 					true
 				#else

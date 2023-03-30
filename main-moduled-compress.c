@@ -69,7 +69,11 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				KosinskiCompressModuled(in_buffer, in_size, WriteByte, out_file,
+				KosinskiCompressCallbacks callbacks;
+				callbacks.user_data = out_file;
+				callbacks.write_byte = WriteByte;
+
+				KosinskiCompressModuled(in_buffer, in_size, &callbacks,
 				#ifdef DEBUG
 					true
 				#else

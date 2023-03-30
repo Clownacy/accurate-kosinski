@@ -54,11 +54,11 @@ int main(int argc, char **argv)
 		{
 			MemoryStream_Create(&uncompressed_buffer, cc_true);
 
-			KosinskiDecompressCallbacks callbacks;
-			callbacks.user_data = &uncompressed_buffer;
-			callbacks.write_byte = WriteByte;
+			KosinskiDecompressCallbacks decompress_callbacks;
+			decompress_callbacks.user_data = &uncompressed_buffer;
+			decompress_callbacks.write_byte = WriteByte;
 
-			KosinskiDecompressModuled(in_file_buffer, &callbacks,
+			KosinskiDecompressModuled(in_file_buffer, &decompress_callbacks,
 			#ifdef DEBUG
 				true
 			#else
@@ -72,7 +72,11 @@ int main(int argc, char **argv)
 
 			MemoryStream_Create(&compressed_buffer, cc_true);
 
-			KosinskiCompressModuled(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), WriteByte, &compressed_buffer,
+			KosinskiCompressCallbacks compress_callbacks;
+			compress_callbacks.user_data = &compressed_buffer;
+			compress_callbacks.write_byte = WriteByte;
+
+			KosinskiCompressModuled(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), &compress_callbacks,
 			#ifdef DEBUG
 				true
 			#else

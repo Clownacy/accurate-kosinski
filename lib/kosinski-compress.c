@@ -63,7 +63,7 @@ static unsigned int descriptor_bits_remaining;
 // common technique back then.
 static unsigned char ring_buffer[SLIDING_WINDOW_SIZE + MAX_MATCH_LENGTH - 1];
 
-static void FlushData(void (*write_byte)(void *user_data, unsigned int byte), const void *user_data)
+static void FlushData(const KosinskiCompressCallbacks *callbacks)
 {
 	descriptor >>= descriptor_bits_remaining;
 
@@ -71,10 +71,10 @@ static void FlushData(void (*write_byte)(void *user_data, unsigned int byte), co
 	// compressor was designed for a little-endian CPU and that it did this:
 	//fwrite(&descriptor, 2, 1, output_file);
 	for (unsigned int i = 0; i < TOTAL_DESCRIPTOR_BITS / 8; ++i)
-		write_byte((void*)user_data, (descriptor >> (i * 8)) & 0xFF);
+		callbacks->write_byte((void*)callbacks->user_data, (descriptor >> (i * 8)) & 0xFF);
 
 	for (size_t i = 0; i < match_buffer_index; ++i)
-		write_byte((void*)user_data, match_buffer[i]);
+		callbacks->write_byte((void*)callbacks->user_data, match_buffer[i]);
 
 	output_position += TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
@@ -84,7 +84,7 @@ static void PutMatchByte(unsigned char byte)
 	match_buffer[match_buffer_index++] = byte;
 }
 
-static void PutDescriptorBit(bool bit, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data)
+static void PutDescriptorBit(bool bit, const KosinskiCompressCallbacks *callbacks)
 {
 	descriptor >>= 1;
 
@@ -93,7 +93,7 @@ static void PutDescriptorBit(bool bit, void (*write_byte)(void *user_data, unsig
 
 	if (--descriptor_bits_remaining == 0)
 	{
-		FlushData(write_byte, user_data);
+		FlushData(callbacks);
 
 		descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 		match_buffer_index = 0; // TODO: Move this to `FlushData`.
@@ -105,7 +105,7 @@ static size_t GetOutputPosition(void)
 	return output_position + TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
 
-void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
+void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages)
 {
 	output_position = 0;
 	match_buffer_index = 0;
@@ -140,8 +140,8 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 				fprintf(stderr, "%zX - 0xA000 boundary flag: %zX\n", GetOutputPosition(), file_index);
 
 			// 0xA000 boundary match
-			PutDescriptorBit(false, write_byte, user_data);
-			PutDescriptorBit(true, write_byte, user_data);
+			PutDescriptorBit(false, callbacks);
+			PutDescriptorBit(true, callbacks);
 			PutMatchByte(0x00);
 			PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
 			PutMatchByte(0x01);
@@ -186,10 +186,10 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 			// Short distance, shortest length
 			const size_t length = longest_match_length - 2;
 
-			PutDescriptorBit(false, write_byte, user_data);
-			PutDescriptorBit(false, write_byte, user_data);
-			PutDescriptorBit((length & 2) != 0, write_byte, user_data);
-			PutDescriptorBit((length & 1) != 0, write_byte, user_data);
+			PutDescriptorBit(false, callbacks);
+			PutDescriptorBit(false, callbacks);
+			PutDescriptorBit((length & 2) != 0, callbacks);
+			PutDescriptorBit((length & 1) != 0, callbacks);
 			PutMatchByte(-longest_match_index & 0xFF);
 		}
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
@@ -200,8 +200,8 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 			// Long distance, short length
 			const size_t distance = -longest_match_index;
 
-			PutDescriptorBit(false, write_byte, user_data);
-			PutDescriptorBit(true, write_byte, user_data);
+			PutDescriptorBit(false, callbacks);
+			PutDescriptorBit(true, callbacks);
 			PutMatchByte(distance & 0xFF);
 			PutMatchByte(((distance >> (8 - 3)) & 0xF8) | ((longest_match_length - 2) & 7));
 		}
@@ -213,8 +213,8 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 			// Long distance, long length
 			const size_t distance = -longest_match_index;
 
-			PutDescriptorBit(false, write_byte, user_data);
-			PutDescriptorBit(true, write_byte, user_data);
+			PutDescriptorBit(false, callbacks);
+			PutDescriptorBit(true, callbacks);
 			PutMatchByte(distance & 0xFF);
 			PutMatchByte((distance >> (8 - 3)) & 0xF8);
 			PutMatchByte(longest_match_length - 1);
@@ -227,7 +227,7 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 			// Match was too small to encode; do a literal match instead
 			longest_match_length = 1;
 
-			PutDescriptorBit(true, write_byte, user_data);
+			PutDescriptorBit(true, callbacks);
 			PutMatchByte(file_buffer[file_index]);
 		}
 
@@ -253,13 +253,13 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 		fprintf(stderr, "%zX - Terminator: %zX\n", GetOutputPosition(), file_index);
 
 	// Terminator match
-	PutDescriptorBit(false, write_byte, user_data);
-	PutDescriptorBit(true, write_byte, user_data);
+	PutDescriptorBit(false, callbacks);
+	PutDescriptorBit(true, callbacks);
 	PutMatchByte(0x00);
 	PutMatchByte(0xF0);	// Honestly, I have no idea why this isn't just 0. I guess it's so you can spot it in a hex editor?
 	PutMatchByte(0x00);
 
-	FlushData(write_byte, user_data);
+	FlushData(callbacks);
 
 	// Mistake 4: There's absolutely no reason to do this.
 	// This might have been because the original compressor's ASM output could
@@ -268,5 +268,5 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 	// Pad to 0x10 bytes
 	size_t bytes_remaining = (0 - output_position) % 0x10;
 	for (size_t i = 0; i < bytes_remaining; ++i)
-		write_byte((void*)user_data, 0);
+		callbacks->write_byte((void*)callbacks->user_data, 0);
 }

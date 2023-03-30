@@ -65,7 +65,11 @@ int main(int argc, char **argv)
 
 			MemoryStream_Create(&memory_stream, cc_true);
 
-			KosinskiCompress(file_buffer, file_size, WriteByte, &memory_stream,
+			KosinskiCompressCallbacks callbacks;
+			callbacks.user_data = &memory_stream;
+			callbacks.write_byte = WriteByte;
+
+			KosinskiCompress(file_buffer, file_size, &callbacks,
 			#ifdef DEBUG
 				true
 			#else

@@ -19,6 +19,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdbool.h>
 #include <stddef.h>
 
-void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages);
+typedef struct KosinskiCompressCallbacks
+{
+	const void *user_data;
+	void (*write_byte)(void *user_data, unsigned int byte);
+} KosinskiCompressCallbacks;
+
+void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages);
 
 #endif /* KOSINSKI_COMPRESS_H */
