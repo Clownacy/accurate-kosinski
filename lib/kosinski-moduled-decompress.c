@@ -21,26 +21,20 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-decompress.h"
 
+#define MODULE_SIZE 0x1000
+
 size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
 {
-	const unsigned char *in_file_pointer = in_file_buffer;
+	const unsigned int raw_size = ((unsigned int)in_file_buffer[0] << 8) | in_file_buffer[1];
+	const unsigned int size = raw_size == 0xA000 ? 0x8000 : raw_size;
 
-	const unsigned char byte1 = *in_file_pointer++;
-	const size_t size = *in_file_pointer++ | (byte1 << 8);
+	const unsigned char *in_file_pointer = in_file_buffer + 2;
 
-	const unsigned char *in_file_base = in_file_pointer;
-
-	size_t extra_module_count = ((size - 1) >> 12);
-	if (extra_module_count == 0xA)
-		extra_module_count = 8;
-
-	for (size_t i = 0; i < extra_module_count; ++i)
+	for (unsigned int i = 0; i < size; i += MODULE_SIZE)
 	{
-		in_file_pointer += KosinskiDecompress(in_file_pointer, write_byte, user_data, print_debug_messages);
-		in_file_pointer += -(in_file_pointer - in_file_base) & 0xF;
+		const size_t bytes_read = KosinskiDecompress(in_file_pointer, write_byte, user_data, print_debug_messages);
+		in_file_pointer += bytes_read + ((0 - bytes_read) % 0x10);
 	}
-
-	KosinskiDecompress(in_file_buffer, write_byte, user_data, print_debug_messages);
 
 	return in_file_pointer - in_file_buffer;
 }

@@ -21,21 +21,18 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-compress.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+#define MODULE_SIZE 0x1000
+
 void KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, void (*write_byte)(void *user_data, unsigned int byte), const void *user_data, bool print_debug_messages)
 {
-	if (file_size > 0xFFFF)
+	if (file_size > 0xFFFF || file_size == 0xA000) // For some reason, 0xA000 is forced to 0x8000 in Sonic 3 & Knuckles' `Process_Kos_Module_Queue_Init` function.
 		return;	// Cannot fit size of file in header - give up // TODO: Error code?
 
-	write_byte((void*)user_data, (file_size >> 8) & 0xFF);
-	write_byte((void*)user_data, (file_size >> 0) & 0xFF);
+	write_byte((void*)user_data, file_size >> 8);
+	write_byte((void*)user_data, file_size & 0xFF);
 
-	const size_t extra_module_count = (file_size - 1) >> 12;
-
-	for (size_t i = 0; i < extra_module_count; ++i)
-	{
-		KosinskiCompress(file_buffer, 0x1000, write_byte, user_data, print_debug_messages);
-		file_buffer += 0x1000;
-	}
-
-	KosinskiCompress(file_buffer, ((file_size - 1) & 0xFFF) + 1, write_byte, user_data, print_debug_messages);
+	for (size_t file_index = 0; file_index < file_size; file_index += MODULE_SIZE)
+		KosinskiCompress(&file_buffer[file_index], MIN(MODULE_SIZE, file_size - file_index), write_byte, user_data, print_debug_messages);
 }
