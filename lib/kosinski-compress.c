@@ -71,10 +71,10 @@ static void FlushData(const KosinskiCompressCallbacks *callbacks)
 	// compressor was designed for a little-endian CPU and that it did this:
 	//fwrite(&descriptor, 2, 1, output_file);
 	for (unsigned int i = 0; i < TOTAL_DESCRIPTOR_BITS / 8; ++i)
-		callbacks->write_byte((void*)callbacks->user_data, (descriptor >> (i * 8)) & 0xFF);
+		callbacks->write_byte((void*)callbacks->write_byte_user_data, (descriptor >> (i * 8)) & 0xFF);
 
 	for (size_t i = 0; i < match_buffer_index; ++i)
-		callbacks->write_byte((void*)callbacks->user_data, match_buffer[i]);
+		callbacks->write_byte((void*)callbacks->write_byte_user_data, match_buffer[i]);
 
 	output_position += TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
@@ -105,25 +105,33 @@ static size_t GetOutputPosition(void)
 	return output_position + TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
 
-void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages)
+void KosinskiCompress(const KosinskiCompressCallbacks *callbacks, bool print_debug_messages)
 {
 	output_position = 0;
 	match_buffer_index = 0;
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
-	size_t read_index = MIN(file_size, MAX_MATCH_LENGTH);
+	size_t read_index = 0;
 
 	// Initialise the ring buffer with data from the file
-	memcpy(ring_buffer, file_buffer, read_index);
+	for (; read_index < MAX_MATCH_LENGTH; ++read_index)
+	{
+		const unsigned int byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
+
+		if (byte == (unsigned int)-1)
+			break;
+
+		ring_buffer[read_index] = byte;
+	}
 
 	// Fill the remainder of the ring buffer with zero. We know that
 	// the original Kosinski compressor did this because of Mistake 6.
-	memset(ring_buffer + read_index, 0, sizeof(ring_buffer) - read_index);
+	memset(&ring_buffer[read_index], 0, sizeof(ring_buffer) - read_index);
 
 	size_t file_index = 0;
 	size_t dummy_counter = 0;
 
-	while (file_index < file_size)
+	while (file_index != read_index)
 	{
 		// Mistake 5: This is completely pointless.
 		// For some reason, the original compressor would insert a dummy match
@@ -175,7 +183,7 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, const 
 		}
 
 		// If the match is longer than the remainder of the file, reduce it to the proper size. See Mistake 6 for more info.
-		longest_match_length = MIN(longest_match_length, file_size - file_index);
+		longest_match_length = MIN(longest_match_length, read_index - file_index);
 
 		// Select the optimal encoding for the current match
 		if (longest_match_length >= 2 && longest_match_length <= 5 && longest_match_index < 0x100) // Mistake 3: This should be '<= 0x100'
@@ -222,20 +230,24 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, const 
 		else
 		{
 			if (print_debug_messages)
-				fprintf(stderr, "%zX - Literal match found: %X at %zX\n", GetOutputPosition(), file_buffer[file_index], file_index);
+				fprintf(stderr, "%zX - Literal match found: %X at %zX\n", GetOutputPosition(), ring_buffer[file_index % SLIDING_WINDOW_SIZE], file_index);
 
 			// Match was too small to encode; do a literal match instead
 			longest_match_length = 1;
 
 			PutDescriptorBit(true, callbacks);
-			PutMatchByte(file_buffer[file_index]);
+			PutMatchByte(ring_buffer[file_index % SLIDING_WINDOW_SIZE]);
 		}
 
 		// Update the ring buffer with bytes from the file
-		for (size_t i = 0; i < longest_match_length && read_index < file_size; ++i, ++read_index)
+		for (size_t i = 0; i < longest_match_length; ++i)
 		{
-			const unsigned char byte = file_buffer[read_index];
-			const size_t ring_buffer_index = read_index % SLIDING_WINDOW_SIZE;
+			const unsigned int byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
+
+			if (byte == (unsigned int)-1)
+				break;
+
+			const size_t ring_buffer_index = read_index++ % SLIDING_WINDOW_SIZE;
 
 			ring_buffer[ring_buffer_index] = byte;
 
@@ -268,5 +280,5 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, const 
 	// Pad to 0x10 bytes
 	size_t bytes_remaining = (0 - output_position) % 0x10;
 	for (size_t i = 0; i < bytes_remaining; ++i)
-		callbacks->write_byte((void*)callbacks->user_data, 0);
+		callbacks->write_byte((void*)callbacks->write_byte_user_data, 0);
 }

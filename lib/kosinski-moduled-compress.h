@@ -21,6 +21,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-compress.h"
 
-void KosinskiCompressModuled(const unsigned char *file_buffer, size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages);
+void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages);
 
 #endif /* KOSINSKI_MODULED_COMPRESS_H */

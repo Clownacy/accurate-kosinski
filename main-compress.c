@@ -19,7 +19,12 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "lib/kosinski-compress.h"
 
-#include "load-file-to-buffer.h"
+static unsigned int ReadByte(void* const user_data)
+{
+	const int byte = fgetc((FILE*)user_data);
+
+	return byte == EOF ? -1 : byte;
+}
 
 static void WriteByte(void* const user_data, const unsigned int byte)
 {
@@ -43,10 +48,9 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		unsigned char *file_buffer;
-		size_t file_size;
+		FILE *in_file = fopen(argv[1], "rb");
 
-		if (!LoadFileToBuffer(argv[1], &file_buffer, &file_size))
+		if (in_file == NULL)
 		{
 			exit_code = EXIT_FAILURE;
 			fprintf(stderr, "Could not open '%s'\n", argv[1]);
@@ -54,6 +58,10 @@ int main(int argc, char **argv)
 		else
 		{
 		#ifdef DEBUG
+			fseek(in_file, 0, SEEK_END);
+			const size_t file_size = ftell(in_file);
+			rewind(in_file);
+
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], file_size);
 		#endif
 
@@ -69,10 +77,12 @@ int main(int argc, char **argv)
 			else
 			{
 				KosinskiCompressCallbacks callbacks;
-				callbacks.user_data = out_file;
+				callbacks.read_byte_user_data = in_file;
+				callbacks.read_byte = ReadByte;
+				callbacks.write_byte_user_data = out_file;
 				callbacks.write_byte = WriteByte;
 
-				KosinskiCompress(file_buffer, file_size, &callbacks,
+				KosinskiCompress(&callbacks,
 				#ifdef DEBUG
 					true
 				#else
@@ -83,7 +93,7 @@ int main(int argc, char **argv)
 				fclose(out_file);
 			}
 
-			free(file_buffer);
+			fclose(in_file);
 		}
 	}
 

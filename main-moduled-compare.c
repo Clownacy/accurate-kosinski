@@ -32,8 +32,7 @@ PERFORMANCE OF THIS SOFTWARE.
 static unsigned int ReadByte(void* const user_data)
 {
 	unsigned char byte;
-	ROMemoryStream_Read((ROMemoryStream*)user_data, &byte, 1, 1);
-	return byte;
+	return ROMemoryStream_Read((ROMemoryStream*)user_data, &byte, 1, 1) == 0 ? -1 : byte;
 }
 
 static void WriteByte(void* const user_data, const unsigned int byte)
@@ -82,14 +81,19 @@ int main(int argc, char **argv)
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], MemoryStream_GetPosition(&uncompressed_buffer));
 		#endif
 
+			ROMemoryStream uncompressed_buffer_read;
+			ROMemoryStream_Create(&uncompressed_buffer_read, MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer));
+
 			MemoryStream recompressed_buffer;
 			MemoryStream_Create(&recompressed_buffer, cc_true);
 
 			KosinskiCompressCallbacks compress_callbacks;
-			compress_callbacks.user_data = &recompressed_buffer;
+			compress_callbacks.read_byte_user_data = &uncompressed_buffer_read;
+			compress_callbacks.read_byte = ReadByte;
+			compress_callbacks.write_byte_user_data = &recompressed_buffer;
 			compress_callbacks.write_byte = WriteByte;
 
-			KosinskiCompressModuled(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), &compress_callbacks,
+			KosinskiCompressModuled(MemoryStream_GetPosition(&uncompressed_buffer), &compress_callbacks,
 			#ifdef DEBUG
 				true
 			#else
@@ -97,6 +101,7 @@ int main(int argc, char **argv)
 			#endif
 			);
 
+			ROMemoryStream_Destroy(&uncompressed_buffer_read);
 			MemoryStream_Destroy(&uncompressed_buffer);
 
 			if (in_file_size != MemoryStream_GetPosition(&recompressed_buffer))
