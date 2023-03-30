@@ -2,6 +2,8 @@ This is a library for compressing and decompressing files in Sega's "Kosinski"
 format (an LZSS variant). The goal is to produce a compressor that outputs data
 identical to Sega's own compressor. Moduled Kosinski is also supported.
 
+https://segaretro.org/Kosinski_compression
+
 Included are basic frontends for a compressor, a decompressor, and a comparison
 utility.
 
