@@ -77,7 +77,7 @@ set_target_properties(kosinski-compress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-compress PRIVATE load-file-to-buffer kosinski-compressor)
+target_link_libraries(kosinski-compress PRIVATE kosinski-compressor)
 
 add_executable(kosinski-compress-d
 	"main-compress.c"
@@ -86,7 +86,7 @@ set_target_properties(kosinski-compress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-compress-d PRIVATE load-file-to-buffer kosinski-compressor)
+target_link_libraries(kosinski-compress-d PRIVATE kosinski-compressor)
 target_compile_definitions(kosinski-compress-d PRIVATE DEBUG)
 
 add_executable(kosinski-compress-asm
@@ -96,7 +96,7 @@ set_target_properties(kosinski-compress-asm PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-compress-asm PRIVATE load-file-to-buffer memory-stream kosinski-compressor)
+target_link_libraries(kosinski-compress-asm PRIVATE memory-stream kosinski-compressor)
 
 add_executable(kosinskim-compress
 	"main-moduled-compress.c"
@@ -105,7 +105,7 @@ set_target_properties(kosinskim-compress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinskim-compress PRIVATE load-file-to-buffer kosinskim-compressor)
+target_link_libraries(kosinskim-compress PRIVATE kosinskim-compressor)
 
 add_executable(kosinskim-compress-d
 	"main-moduled-compress.c"
@@ -114,7 +114,7 @@ set_target_properties(kosinskim-compress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinskim-compress-d PRIVATE load-file-to-buffer kosinskim-compressor)
+target_link_libraries(kosinskim-compress-d PRIVATE kosinskim-compressor)
 target_compile_definitions(kosinskim-compress-d PRIVATE DEBUG)
 
 # Decompressors
@@ -125,7 +125,7 @@ set_target_properties(kosinski-decompress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-decompress PRIVATE load-file-to-buffer kosinski-decompressor)
+target_link_libraries(kosinski-decompress PRIVATE kosinski-decompressor)
 
 add_executable(kosinski-decompress-d
 	"main-decompress.c"
@@ -134,7 +134,7 @@ set_target_properties(kosinski-decompress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinski-decompress-d PRIVATE load-file-to-buffer kosinski-decompressor)
+target_link_libraries(kosinski-decompress-d PRIVATE kosinski-decompressor)
 target_compile_definitions(kosinski-decompress-d PRIVATE DEBUG)
 
 add_executable(kosinskim-decompress
@@ -144,7 +144,7 @@ set_target_properties(kosinskim-decompress PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinskim-decompress PRIVATE load-file-to-buffer kosinskim-decompressor)
+target_link_libraries(kosinskim-decompress PRIVATE kosinskim-decompressor)
 
 add_executable(kosinskim-decompress-d
 	"main-moduled-decompress.c"
@@ -153,7 +153,7 @@ set_target_properties(kosinskim-decompress-d PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinskim-decompress-d PRIVATE load-file-to-buffer kosinskim-decompressor)
+target_link_libraries(kosinskim-decompress-d PRIVATE kosinskim-decompressor)
 target_compile_definitions(kosinskim-decompress-d PRIVATE DEBUG)
 
 # Comparers

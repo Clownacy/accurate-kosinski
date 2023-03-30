@@ -19,7 +19,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "lib/kosinski-compress.h"
 
-#include "load-file-to-buffer.h"
 #include "memory-stream.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
