@@ -23,18 +23,43 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #define MODULE_SIZE 0x1000
 
-size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages)
+typedef struct CallbacksAndCounter
 {
-	const unsigned int raw_size = ((unsigned int)in_file_buffer[0] << 8) | in_file_buffer[1];
+	const KosinskiDecompressCallbacks *callbacks;
+	size_t read_position;
+} CallbacksAndCounter;
+
+static unsigned int ReadByte(void* const user_data)
+{
+	CallbacksAndCounter* const callbacks_and_counter = (CallbacksAndCounter*)user_data;
+
+	++callbacks_and_counter->read_position;
+
+	return callbacks_and_counter->callbacks->read_byte((void*)callbacks_and_counter->callbacks->read_byte_user_data);
+}
+
+void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages)
+{
+	const unsigned int high_byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
+	const unsigned int low_byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
+	const unsigned int raw_size = (high_byte << 8) | low_byte;
 	const unsigned int size = raw_size == 0xA000 ? 0x8000 : raw_size;
 
-	const unsigned char *in_file_pointer = in_file_buffer + 2;
+	CallbacksAndCounter callbacks_and_counter;
+	callbacks_and_counter.callbacks = callbacks;
+	callbacks_and_counter.read_position = 0;
+
+	KosinskiDecompressCallbacks new_callbacks;
+	new_callbacks.read_byte_user_data = &callbacks_and_counter;
+	new_callbacks.read_byte = ReadByte;
+	new_callbacks.write_byte_user_data = callbacks->write_byte_user_data;
+	new_callbacks.write_byte = callbacks->write_byte;
 
 	for (unsigned int i = 0; i < size; i += MODULE_SIZE)
 	{
-		const size_t bytes_read = KosinskiDecompress(in_file_pointer, callbacks, print_debug_messages);
-		in_file_pointer += bytes_read + ((0 - bytes_read) % 0x10);
+		KosinskiDecompress(&new_callbacks, print_debug_messages);
+		
+		for (unsigned int j = 0; j < (0 - callbacks_and_counter.read_position) % 0x10; ++j)
+			new_callbacks.read_byte((void*)new_callbacks.read_byte_user_data);
 	}
-
-	return in_file_pointer - in_file_buffer;
 }

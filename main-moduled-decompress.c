@@ -19,7 +19,10 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "lib/kosinski-moduled-decompress.h"
 
-#include "load-file-to-buffer.h"
+static unsigned int ReadByte(void* const user_data)
+{
+	return fgetc((FILE*)user_data);
+}
 
 static void WriteByte(void* const user_data, const unsigned int byte)
 {
@@ -43,9 +46,9 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		unsigned char *in_buffer;
+		FILE *in_file = fopen(argv[1], "rb");
 
-		if (!LoadFileToBuffer(argv[1], &in_buffer, NULL))
+		if (in_file == NULL)
 		{
 			exit_code = EXIT_FAILURE;
 			fprintf(stderr, "Could not open '%s'\n", argv[1]);
@@ -64,10 +67,12 @@ int main(int argc, char **argv)
 			else
 			{
 				KosinskiDecompressCallbacks callbacks;
-				callbacks.user_data = out_file;
+				callbacks.read_byte_user_data = in_file;
+				callbacks.read_byte = ReadByte;
+				callbacks.write_byte_user_data = out_file;
 				callbacks.write_byte = WriteByte;
 
-				KosinskiDecompressModuled(in_buffer, &callbacks,
+				KosinskiDecompressModuled(&callbacks,
 				#ifdef DEBUG
 					true
 				#else
@@ -78,7 +83,7 @@ int main(int argc, char **argv)
 				fclose(out_file);
 			}
 
-			free(in_buffer);
+			fclose(in_file);
 		}
 	}
 

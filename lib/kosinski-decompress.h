@@ -21,10 +21,12 @@ PERFORMANCE OF THIS SOFTWARE.
 
 typedef struct KosinskiDecompressCallbacks
 {
-	const void *user_data;
+	const void *read_byte_user_data;
+	unsigned int (*read_byte)(void *user_data);
+	const void *write_byte_user_data;
 	void (*write_byte)(void *user_data, unsigned int byte);
 } KosinskiDecompressCallbacks;
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_information);
+void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print_debug_information);
 
 #endif /* KOSINSKI_DECOMPRESS_H */

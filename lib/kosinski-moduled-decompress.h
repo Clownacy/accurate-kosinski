@@ -21,6 +21,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-decompress.h"
 
-size_t KosinskiDecompressModuled(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages);
+void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages);
 
 #endif /* KOSINSKI_MODULED_DECOMPRESS_H */

@@ -29,8 +29,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-static MemoryStream uncompressed_buffer;
-static MemoryStream compressed_buffer;
+static unsigned int ReadByte(void* const user_data)
+{
+	unsigned char byte;
+	ROMemoryStream_Read((ROMemoryStream*)user_data, &byte, 1, 1);
+	return byte;
+}
 
 static void WriteByte(void* const user_data, const unsigned int byte)
 {
@@ -52,13 +56,19 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			ROMemoryStream compressed_buffer;
+			ROMemoryStream_Create(&compressed_buffer, in_file_buffer, in_file_size);
+
+			MemoryStream uncompressed_buffer;
 			MemoryStream_Create(&uncompressed_buffer, cc_true);
 
 			KosinskiDecompressCallbacks decompress_callbacks;
-			decompress_callbacks.user_data = &uncompressed_buffer;
+			decompress_callbacks.read_byte_user_data = &compressed_buffer;
+			decompress_callbacks.read_byte = ReadByte;
+			decompress_callbacks.write_byte_user_data = &uncompressed_buffer;
 			decompress_callbacks.write_byte = WriteByte;
 
-			KosinskiDecompressModuled(in_file_buffer, &decompress_callbacks,
+			KosinskiDecompressModuled(&decompress_callbacks,
 			#ifdef DEBUG
 				true
 			#else
@@ -66,14 +76,17 @@ int main(int argc, char **argv)
 			#endif
 			);
 
+			ROMemoryStream_Destroy(&compressed_buffer);
+
 		#ifdef DEBUG
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], MemoryStream_GetPosition(&uncompressed_buffer));
 		#endif
 
-			MemoryStream_Create(&compressed_buffer, cc_true);
+			MemoryStream recompressed_buffer;
+			MemoryStream_Create(&recompressed_buffer, cc_true);
 
 			KosinskiCompressCallbacks compress_callbacks;
-			compress_callbacks.user_data = &compressed_buffer;
+			compress_callbacks.user_data = &recompressed_buffer;
 			compress_callbacks.write_byte = WriteByte;
 
 			KosinskiCompressModuled(MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer), &compress_callbacks,
@@ -86,12 +99,12 @@ int main(int argc, char **argv)
 
 			MemoryStream_Destroy(&uncompressed_buffer);
 
-			if (in_file_size != MemoryStream_GetPosition(&compressed_buffer))
+			if (in_file_size != MemoryStream_GetPosition(&recompressed_buffer))
 			{
 				exit_code = EXIT_FAILURE;
 				fputs("FAILURE: The size of the recompressed data does not match the original.\n", stdout);
 			}
-			else if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&compressed_buffer), MIN(in_file_size, MemoryStream_GetPosition(&compressed_buffer))))
+			else if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&recompressed_buffer), MIN(in_file_size, MemoryStream_GetPosition(&recompressed_buffer))))
 			{
 				exit_code = EXIT_FAILURE;
 				fputs("FAILURE: The recompressed data does not match the original.\n", stdout);
@@ -101,7 +114,7 @@ int main(int argc, char **argv)
 				fputs("SUCCESS: The recompressed data matches the original.\n", stdout);
 			}
 
-			MemoryStream_Destroy(&compressed_buffer);
+			MemoryStream_Destroy(&recompressed_buffer);
 			free(in_file_buffer);
 		}
 	}

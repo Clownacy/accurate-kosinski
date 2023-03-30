@@ -24,53 +24,60 @@ PERFORMANCE OF THIS SOFTWARE.
 static unsigned int descriptor;
 static unsigned int descriptor_bits_remaining;
 
-static const unsigned char *in_file_pointer;
-
 #define SLIDING_WINDOW_SIZE 0x2000
 static unsigned char backsearch_buffer[SLIDING_WINDOW_SIZE];
+static size_t read_position;
 static size_t write_position;
 
-static void GetDescriptor(void)
+static unsigned int ReadByte(const KosinskiDecompressCallbacks* const callbacks)
+{
+	++read_position;
+	return callbacks->read_byte((void*)callbacks->read_byte_user_data);
+}
+
+static void WriteByte(const unsigned int byte, const KosinskiDecompressCallbacks* const callbacks)
+{
+	callbacks->write_byte((void*)callbacks->write_byte_user_data, byte);
+	backsearch_buffer[write_position++ % SLIDING_WINDOW_SIZE] = byte;
+}
+
+
+static void GetDescriptor(const KosinskiDecompressCallbacks* const callbacks)
 {
 	descriptor_bits_remaining = 16;
 
-	const unsigned int low_byte = *in_file_pointer++;
-	const unsigned int high_byte = *in_file_pointer++;
+	const unsigned int low_byte = ReadByte(callbacks);
+	const unsigned int high_byte = ReadByte(callbacks);
 
 	descriptor = (high_byte << 8) | low_byte;
 }
 
-static bool PopDescriptor(void)
+static bool PopDescriptor(const KosinskiDecompressCallbacks* const callbacks)
 {
 	const bool result = (descriptor & 1) != 0;
 
 	descriptor >>= 1;
 
 	if (--descriptor_bits_remaining == 0)
-		GetDescriptor();
+		GetDescriptor(callbacks);
 
 	return result;
 }
 
-static void WriteByte(const unsigned int byte, const KosinskiDecompressCallbacks* const callbacks)
+void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print_debug_information)
 {
-	callbacks->write_byte((void*)callbacks->user_data, byte);
-	backsearch_buffer[write_position++ % SLIDING_WINDOW_SIZE] = byte;
-}
+	read_position = 0;
+	write_position = 0;
 
-size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDecompressCallbacks *callbacks, bool print_debug_information)
-{	
-	in_file_pointer = in_file_buffer;
-
-	GetDescriptor();
+	GetDescriptor(callbacks);
 
 	for (;;)
 	{
-		if (PopDescriptor())
+		if (PopDescriptor(callbacks))
 		{
-			const size_t position = in_file_pointer - in_file_buffer;
+			const size_t position = read_position;
 
-			const unsigned char byte = *in_file_pointer++;
+			const unsigned char byte = ReadByte(callbacks);
 
 			if (print_debug_information)
 				fprintf(stderr, "%zX - Literal match: At %zX, value %X\n", position, write_position, byte);
@@ -82,12 +89,12 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDec
 			unsigned int distance;
 			size_t count;
 
-			if (PopDescriptor())
+			if (PopDescriptor(callbacks))
 			{
-				const size_t position = in_file_pointer - in_file_buffer;
+				const size_t position = read_position;
 
-				const unsigned char low_byte = *in_file_pointer++;
-				const unsigned char high_byte = *in_file_pointer++;
+				const unsigned char low_byte = ReadByte(callbacks);
+				const unsigned char high_byte = ReadByte(callbacks);
 
 				distance = 0xE000 | ((high_byte & 0xF8) << 5) | low_byte;
 				distance = (distance ^ 0xFFFF) + 1; // Convert from negative two's-complement to positive
@@ -102,7 +109,7 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDec
 				}
 				else
 				{
-					count = *in_file_pointer++ + 1;
+					count = ReadByte(callbacks) + 1;
 
 					if (count == 1)
 					{
@@ -129,14 +136,14 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDec
 			{
 				count = 2;
 
-				if (PopDescriptor())
+				if (PopDescriptor(callbacks))
 					count += 2;
-				if (PopDescriptor())
+				if (PopDescriptor(callbacks))
 					count += 1;
 
-				const size_t position = in_file_pointer - in_file_buffer;
+				const size_t position = read_position;
 
-				distance = (*in_file_pointer++ ^ 0xFF) + 1; // Convert from negative two's-complement to positive
+				distance = (ReadByte(callbacks) ^ 0xFF) + 1; // Convert from negative two's-complement to positive
 
 				if (print_debug_information)
 					fprintf(stderr, "%zX - Inline match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
@@ -146,6 +153,4 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, const KosinskiDec
 				WriteByte(backsearch_buffer[(write_position - distance) % SLIDING_WINDOW_SIZE], callbacks);
 		}
 	}
-
-	return in_file_pointer - in_file_buffer;
 }
