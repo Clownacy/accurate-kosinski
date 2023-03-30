@@ -45,7 +45,12 @@ int main(int argc, char **argv)
 	{
 		unsigned char *in_file_buffer;
 		size_t in_file_size;
-		if (LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
+		if (!LoadFileToBuffer(argv[i], &in_file_buffer, &in_file_size))
+		{
+			exit_code = EXIT_FAILURE;
+			fprintf(stderr, "Could not open '%s'\n", argv[i]);
+		}
+		else
 		{
 			MemoryStream_Create(&uncompressed_buffer, cc_true);
 
@@ -76,26 +81,20 @@ int main(int argc, char **argv)
 			if (in_file_size != MemoryStream_GetPosition(&compressed_buffer))
 			{
 				exit_code = EXIT_FAILURE;
-				fputs("File sizes don't match!\n", stdout);
+				fputs("FAILURE: The size of the recompressed data does not match the original.\n", stdout);
 			}
-
-			if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&compressed_buffer), MIN(in_file_size, MemoryStream_GetPosition(&compressed_buffer))))
+			else if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&compressed_buffer), MIN(in_file_size, MemoryStream_GetPosition(&compressed_buffer))))
 			{
 				exit_code = EXIT_FAILURE;
-				fputs("The files don't match!\n\n", stdout);
+				fputs("FAILURE: The recompressed data does not match the original.\n", stdout);
 			}
 			else
 			{
-				fputs("Yay the files match.\n\n", stdout);
+				fputs("SUCCESS: The recompressed data matches the original.\n", stdout);
 			}
 
 			MemoryStream_Destroy(&compressed_buffer);
 			free(in_file_buffer);
-		}
-		else
-		{
-			exit_code = EXIT_FAILURE;
-			fprintf(stderr, "Could not open '%s'\n", argv[i]);
 		}
 	}
 

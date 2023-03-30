@@ -34,15 +34,15 @@ static void GetDescriptor(void)
 {
 	descriptor_bits_remaining = 16;
 
-	const unsigned char byte1 = *in_file_pointer++;
-	const unsigned char byte2 = *in_file_pointer++;
+	const unsigned int low_byte = *in_file_pointer++;
+	const unsigned int high_byte = *in_file_pointer++;
 
-	descriptor = (byte2 << 8) | byte1;
+	descriptor = (high_byte << 8) | low_byte;
 }
 
 static bool PopDescriptor(void)
 {
-	const bool result = descriptor & 1;
+	const bool result = (descriptor & 1) != 0;
 
 	descriptor >>= 1;
 
@@ -86,12 +86,12 @@ size_t KosinskiDecompress(const unsigned char *in_file_buffer, void (* const wri
 			{
 				const size_t position = in_file_pointer - in_file_buffer;
 
-				const unsigned char byte1 = *in_file_pointer++;
-				const unsigned char byte2 = *in_file_pointer++;
+				const unsigned char low_byte = *in_file_pointer++;
+				const unsigned char high_byte = *in_file_pointer++;
 
-				distance = byte1 | ((byte2 & 0xF8) << 5) | 0xE000;
+				distance = 0xE000 | ((high_byte & 0xF8) << 5) | low_byte;
 				distance = (distance ^ 0xFFFF) + 1; // Convert from negative two's-complement to positive
-				count = byte2 & 7;
+				count = high_byte & 7;
 
 				if (count != 0)
 				{

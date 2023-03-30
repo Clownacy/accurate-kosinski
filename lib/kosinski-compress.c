@@ -89,7 +89,7 @@ static void PutDescriptorBit(bool bit, void (*write_byte)(void *user_data, unsig
 	descriptor >>= 1;
 
 	if (bit)
-		descriptor |= 1 << (TOTAL_DESCRIPTOR_BITS - 1);
+		descriptor |= 1u << (TOTAL_DESCRIPTOR_BITS - 1);
 
 	if (--descriptor_bits_remaining == 0)
 	{
@@ -165,9 +165,7 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 			const unsigned char *current_data = &ring_buffer[file_index % SLIDING_WINDOW_SIZE];
 			const unsigned char *previous_data = &ring_buffer[(file_index - backsearch_index) % SLIDING_WINDOW_SIZE];
 			while (match_length < MAX_MATCH_LENGTH && *current_data++ == *previous_data++)
-			{
 				++match_length;
-			}
 
 			if (match_length > longest_match_length)
 			{
@@ -190,8 +188,8 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 
 			PutDescriptorBit(false, write_byte, user_data);
 			PutDescriptorBit(false, write_byte, user_data);
-			PutDescriptorBit(length & 2, write_byte, user_data);
-			PutDescriptorBit(length & 1, write_byte, user_data);
+			PutDescriptorBit((length & 2) != 0, write_byte, user_data);
+			PutDescriptorBit((length & 1) != 0, write_byte, user_data);
 			PutMatchByte(-longest_match_index & 0xFF);
 		}
 		else if (longest_match_length >= 3 && longest_match_length <= 9)
@@ -268,7 +266,7 @@ void KosinskiCompress(const unsigned char *file_buffer, size_t file_size, void (
 	// only write exactly 0x10 values per dc.b instruction.
 
 	// Pad to 0x10 bytes
-	size_t bytes_remaining = (0 - output_position) & 0xF;
+	size_t bytes_remaining = (0 - output_position) % 0x10;
 	for (size_t i = 0; i < bytes_remaining; ++i)
 		write_byte((void*)user_data, 0);
 }

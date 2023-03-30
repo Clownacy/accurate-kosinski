@@ -45,13 +45,23 @@ int main(int argc, char **argv)
 	{
 		unsigned char *in_buffer;
 
-		if (LoadFileToBuffer(argv[1], &in_buffer, NULL))
+		if (!LoadFileToBuffer(argv[1], &in_buffer, NULL))
+		{
+			exit_code = EXIT_FAILURE;
+			fprintf(stderr, "Could not open '%s'\n", argv[1]);
+		}
+		else
 		{
 			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
 
 			FILE *out_file = fopen(out_filename, "wb");
 
-			if (out_file != NULL)
+			if (out_file == NULL)
+			{
+				exit_code = EXIT_FAILURE;
+				fprintf(stderr, "Could not open '%s'\n", out_filename);
+			}
+			else
 			{
 				KosinskiDecompress(in_buffer, WriteByte, out_file,
 				#ifdef DEBUG
@@ -63,18 +73,8 @@ int main(int argc, char **argv)
 
 				fclose(out_file);
 			}
-			else
-			{
-				exit_code = EXIT_FAILURE;
-				fprintf(stderr, "Could not open '%s'\n", out_filename);
-			}
 
 			free(in_buffer);
-		}
-		else
-		{
-			exit_code = EXIT_FAILURE;
-			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
 

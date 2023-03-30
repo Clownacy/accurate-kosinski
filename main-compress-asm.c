@@ -22,6 +22,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "load-file-to-buffer.h"
 #include "memory-stream.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 static MemoryStream memory_stream;
 
 static void WriteByte(void* const user_data, const unsigned int byte)
@@ -50,10 +52,15 @@ int main(int argc, char **argv)
 		unsigned char *file_buffer;
 		size_t file_size;
 
-		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
+		if (!LoadFileToBuffer(argv[1], &file_buffer, &file_size))
+		{
+			exit_code = EXIT_FAILURE;
+			fprintf(stderr, "Could not open '%s'\n", argv[1]);
+		}
+		else
 		{
 		#ifdef DEBUG
-			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
+			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], file_size);
 		#endif
 
 			MemoryStream_Create(&memory_stream, cc_true);
@@ -72,42 +79,38 @@ int main(int argc, char **argv)
 
 			FILE *out_file = fopen(out_filename, "w");
 
-			if (out_file != NULL)
-			{
-				const unsigned char* const out_buffer = MemoryStream_GetBuffer(&memory_stream);
-				const size_t out_size = MemoryStream_GetPosition(&memory_stream);
-
-				size_t claimed_out_size = (out_size + 0x100) & ~0xFF;
-				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'
-				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100, file_size / 32);
-
-				unsigned int index = 0;
-				for (size_t bytes_remaining = out_size; bytes_remaining != 0; bytes_remaining -= 0x10)
-				{
-					fprintf(out_file, "\n	dc.b	");
-
-					fprintf(out_file, "$%.2x", out_buffer[index++]);
-
-					for (unsigned int i = 1; i < 0x10; ++i)
-					{
-						fprintf(out_file, ",$%.2x", out_buffer[index++]);
-					}
-				}
-
-				fclose(out_file);
-			}
-			else
+			if (out_file == NULL)
 			{
 				exit_code = EXIT_FAILURE;
 				fprintf(stderr, "Could not open '%s'\n", out_filename);
 			}
+			else
+			{
+				const unsigned char *out_pointer = MemoryStream_GetBuffer(&memory_stream);
+				const size_t out_size = MemoryStream_GetPosition(&memory_stream);
+
+				size_t claimed_out_size = out_size + ((0 - out_size) % 0x100);
+				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'.
+				// A 'cell' is what we call a 'tile'. This suggests that Kosinski was intended for compressing tiles, rather than any other kind of data.
+				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100.0f, file_size / (8 * 8 / 2));
+
+				for (size_t i = 0; i < out_size; i += 0x10)
+				{
+					fprintf(out_file, "\n	dc.b	$%.2x", *out_pointer++);
+
+					unsigned int j = 1;
+
+					for (; j < MIN(0x10, out_size - i); ++j)
+						fprintf(out_file, ",$%.2x", *out_pointer++);
+
+					for (; j < 0x10; ++j)
+						fputs(",$00", out_file);
+				}
+
+				fclose(out_file);
+			}
 
 			MemoryStream_Destroy(&memory_stream);
-		}
-		else
-		{
-			exit_code = EXIT_FAILURE;
-			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
 

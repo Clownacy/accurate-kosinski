@@ -46,7 +46,12 @@ int main(int argc, char **argv)
 		unsigned char *file_buffer;
 		size_t file_size;
 
-		if (LoadFileToBuffer(argv[1], &file_buffer, &file_size))
+		if (!LoadFileToBuffer(argv[1], &file_buffer, &file_size))
+		{
+			exit_code = EXIT_FAILURE;
+			fprintf(stderr, "Could not open '%s'\n", argv[1]);
+		}
+		else
 		{
 		#ifdef DEBUG
 			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], file_size);
@@ -56,7 +61,12 @@ int main(int argc, char **argv)
 
 			FILE *out_file = fopen(out_filename, "wb");
 
-			if (out_file != NULL)
+			if (out_file == NULL)
+			{
+				exit_code = EXIT_FAILURE;
+				fprintf(stderr, "Could not open '%s'\n", out_filename);
+			}
+			else
 			{
 				KosinskiCompress(file_buffer, file_size, WriteByte, out_file,
 				#ifdef DEBUG
@@ -68,18 +78,8 @@ int main(int argc, char **argv)
 
 				fclose(out_file);
 			}
-			else
-			{
-				exit_code = EXIT_FAILURE;
-				fprintf(stderr, "Could not open '%s'\n", out_filename);
-			}
 
 			free(file_buffer);
-		}
-		else
-		{
-			exit_code = EXIT_FAILURE;
-			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
 
