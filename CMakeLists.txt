@@ -7,8 +7,10 @@ project(accurate-kosinski LANGUAGES C)
 # Libraries #
 #############
 
+add_library(accurate-kosinski-clowncommon INTERFACE) # Namespaced to prevent collision with other projects that may create their own clowncommon target.
+target_include_directories(accurate-kosinski-clowncommon INTERFACE "clowncommon")
+
 add_library(memory-stream STATIC
-	"clowncommon/clowncommon.h"
 	"memory-stream.c"
 	"memory-stream.h"
 )
@@ -16,9 +18,9 @@ set_target_properties(memory-stream PROPERTIES
 	C_STANDARD 90
 	C_EXTENSIONS OFF
 )
+target_link_libraries(memory-stream PUBLIC accurate-kosinski-clowncommon)
 
 add_library(load-file-to-buffer STATIC
-	"clowncommon/clowncommon.h"
 	"load-file-to-buffer.c"
 	"load-file-to-buffer.h"
 )
@@ -26,6 +28,7 @@ set_target_properties(load-file-to-buffer PROPERTIES
 	C_STANDARD 90
 	C_EXTENSIONS OFF
 )
+target_link_libraries(load-file-to-buffer PUBLIC accurate-kosinski-clowncommon)
 
 add_library(kosinski-compressor STATIC
 	"lib/kosinski-compress.c"
