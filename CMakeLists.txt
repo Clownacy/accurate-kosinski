@@ -8,7 +8,7 @@ project(accurate-kosinski LANGUAGES C)
 #############
 
 add_library(accurate-kosinski-clowncommon INTERFACE) # Namespaced to prevent collision with other projects that may create their own clowncommon target.
-target_include_directories(accurate-kosinski-clowncommon INTERFACE "clowncommon")
+target_include_directories(accurate-kosinski-clowncommon INTERFACE "lib/clowncommon")
 
 add_library(memory-stream STATIC
 	"memory-stream.c"
@@ -35,9 +35,10 @@ add_library(kosinski-compressor STATIC
 	"lib/kosinski-compress.h"
 )
 set_target_properties(kosinski-compressor PROPERTIES
-	C_STANDARD 99
+	C_STANDARD 90
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-compressor PUBLIC accurate-kosinski-clowncommon)
 
 add_library(kosinski-decompressor STATIC
 	"lib/kosinski-decompress.c"
@@ -56,7 +57,7 @@ set_target_properties(kosinskim-compressor PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinskim-compressor PRIVATE kosinski-compressor)
+target_link_libraries(kosinskim-compressor PUBLIC kosinski-compressor)
 
 add_library(kosinskim-decompressor STATIC
 	"lib/kosinski-moduled-decompress.c"
@@ -66,7 +67,7 @@ set_target_properties(kosinskim-decompressor PROPERTIES
 	C_STANDARD 99
 	C_EXTENSIONS OFF
 )
-target_link_libraries(kosinskim-decompressor PRIVATE kosinski-decompressor)
+target_link_libraries(kosinskim-decompressor PUBLIC kosinski-decompressor)
 
 
 #########
