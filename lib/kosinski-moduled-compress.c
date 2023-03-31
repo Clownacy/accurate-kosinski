@@ -15,13 +15,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-moduled-compress.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-
-#include "kosinski-compress.h"
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define MODULE_SIZE 0x1000
 
@@ -43,10 +38,12 @@ static unsigned int ReadByte(void* const user_data)
 	return callbacks_and_counter->callbacks->read_byte((void*)callbacks_and_counter->callbacks->read_byte_user_data);
 }
 
-void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages)
+void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *callbacks, cc_bool print_debug_messages)
 {
-	if (file_size > 0xFFFF || file_size == 0xA000) // For some reason, 0xA000 is forced to 0x8000 in Sonic 3 & Knuckles' `Process_Kos_Module_Queue_Init` function.
-		return;	// Cannot fit size of file in header - give up // TODO: Error code?
+	size_t file_index;
+
+	if (file_size > 0xFFFF || file_size == 0xA000) /* For some reason, 0xA000 is forced to 0x8000 in Sonic 3 & Knuckles' `Process_Kos_Module_Queue_Init` function. */
+		return;	/* Cannot fit size of file in header - give up // TODO: Error code? */
 
 	callbacks->write_byte((void*)callbacks->write_byte_user_data, file_size >> 8);
 	callbacks->write_byte((void*)callbacks->write_byte_user_data, file_size & 0xFF);
@@ -60,7 +57,7 @@ void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *
 	new_callbacks.write_byte_user_data = callbacks->write_byte_user_data;
 	new_callbacks.write_byte = callbacks->write_byte;
 
-	for (size_t file_index = 0; file_index < file_size; file_index += MODULE_SIZE)
+	for (file_index = 0; file_index < file_size; file_index += MODULE_SIZE)
 	{
 		callbacks_and_counter.bytes_remaining = MODULE_SIZE;
 		KosinskiCompress(&new_callbacks, print_debug_messages);

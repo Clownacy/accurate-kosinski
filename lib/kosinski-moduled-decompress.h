@@ -16,11 +16,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef KOSINSKI_MODULED_DECOMPRESS_H
 #define KOSINSKI_MODULED_DECOMPRESS_H
 
-#include <stdbool.h>
 #include <stddef.h>
+
+#include "clowncommon/clowncommon.h"
 
 #include "kosinski-decompress.h"
 
-void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages);
+void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, cc_bool print_debug_messages);
 
 #endif /* KOSINSKI_MODULED_DECOMPRESS_H */

@@ -15,11 +15,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-moduled-decompress.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-
-#include "kosinski-decompress.h"
 
 #define MODULE_SIZE 0x1000
 
@@ -38,8 +35,10 @@ static unsigned int ReadByte(void* const user_data)
 	return callbacks_and_counter->callbacks->read_byte((void*)callbacks_and_counter->callbacks->read_byte_user_data);
 }
 
-void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, bool print_debug_messages)
+void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, cc_bool print_debug_messages)
 {
+	unsigned int i;
+
 	const unsigned int high_byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
 	const unsigned int low_byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
 	const unsigned int raw_size = (high_byte << 8) | low_byte;
@@ -55,13 +54,11 @@ void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, boo
 	new_callbacks.write_byte_user_data = callbacks->write_byte_user_data;
 	new_callbacks.write_byte = callbacks->write_byte;
 
-	for (unsigned int i = 0; i < size; i += MODULE_SIZE)
+	for (i = 0; i < size; i += MODULE_SIZE)
 	{
 		KosinskiDecompress(&new_callbacks, print_debug_messages);
 
-		const unsigned int padding_bytes = (0 - callbacks_and_counter.read_position) % 0x10;
-
-		for (unsigned int j = 0; j < padding_bytes; ++j)
+		while (callbacks_and_counter.read_position % 0x10 != 0)
 			new_callbacks.read_byte((void*)new_callbacks.read_byte_user_data);
 	}
 }

@@ -16,11 +16,12 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef KOSINSKI_MODULED_COMPRESS_H
 #define KOSINSKI_MODULED_COMPRESS_H
 
-#include <stdbool.h>
 #include <stddef.h>
+
+#include "clowncommon/clowncommon.h"
 
 #include "kosinski-compress.h"
 
-void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *callbacks, bool print_debug_messages);
+void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *callbacks, cc_bool print_debug_messages);
 
 #endif /* KOSINSKI_MODULED_COMPRESS_H */
