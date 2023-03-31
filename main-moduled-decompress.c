@@ -13,7 +13,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +56,6 @@ int main(int argc, char **argv)
 		else
 		{
 			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
-
 			FILE *out_file = fopen(out_filename, "wb");
 
 			if (out_file == NULL)
@@ -75,9 +73,9 @@ int main(int argc, char **argv)
 
 				KosinskiDecompressModuled(&callbacks,
 				#ifdef DEBUG
-					true
+					cc_true
 				#else
-					false
+					cc_false
 				#endif
 				);
 

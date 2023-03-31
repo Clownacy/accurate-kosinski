@@ -13,7 +13,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,8 +20,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "lib/kosinski-compress.h"
 
 #include "memory-stream.h"
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static MemoryStream memory_stream;
 
@@ -65,17 +62,21 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			unsigned long file_size;
+			KosinskiCompressCallbacks callbacks;
+			const char *out_filename;
+			FILE *out_file;
+
 			fseek(in_file, 0, SEEK_END);
-			const size_t file_size = ftell(in_file);
+			file_size = ftell(in_file);
 			rewind(in_file);
 
 		#ifdef DEBUG
-			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], file_size);
+			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
 		#endif
 
 			MemoryStream_Create(&memory_stream, cc_true);
 
-			KosinskiCompressCallbacks callbacks;
 			callbacks.read_byte_user_data = in_file;
 			callbacks.read_byte = ReadByte;
 			callbacks.write_byte_user_data = &memory_stream;
@@ -83,17 +84,16 @@ int main(int argc, char **argv)
 
 			KosinskiCompress(&callbacks,
 			#ifdef DEBUG
-				true
+				cc_true
 			#else
-				false
+				cc_false
 			#endif
 			);
 
 			fclose(in_file);
 
-			const char *out_filename = (argc > 2) ? argv[2] : "out.asm";
-
-			FILE *out_file = fopen(out_filename, "w");
+			out_filename = (argc > 2) ? argv[2] : "out.asm";
+			out_file = fopen(out_filename, "w");
 
 			if (out_file == NULL)
 			{
@@ -102,21 +102,25 @@ int main(int argc, char **argv)
 			}
 			else
 			{
+				size_t i;
+
 				const unsigned char *out_pointer = MemoryStream_GetBuffer(&memory_stream);
 				const size_t out_size = MemoryStream_GetPosition(&memory_stream);
+				const size_t claimed_out_size = out_size + ((0 - out_size) % 0x100);
 
-				size_t claimed_out_size = out_size + ((0 - out_size) % 0x100);
-				// Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'.
-				// A 'cell' is what we call a 'tile'. This suggests that Kosinski was intended for compressing tiles, rather than any other kind of data.
-				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%zx  \x88\xB3\x8F\x6B\x8C\xE3 $%zx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %zd\n", file_size, claimed_out_size, ((float)claimed_out_size / file_size) * 100.0f, file_size / (8 * 8 / 2));
+				/* Shift-JIS: Supposedly translates to 'Before compression', 'After compression', 'Compression ratio', and 'Number of cells'.
+				   A 'cell' is what we call a 'tile'. This suggests that Kosinski was intended for compressing tiles, rather than any other kind of data. */
+				fprintf(out_file, "; \x88\xB3\x8F\x6B\x91\x4F $%lx  \x88\xB3\x8F\x6B\x8C\xE3 $%lx  \x88\xB3\x8F\x6B\x97\xA6 %.1f%%  \x83\x5A\x83\x8B\x90\x94 %ld\n", file_size, (unsigned long)claimed_out_size, ((float)claimed_out_size / file_size) * 100.0f, file_size / (8 * 8 / 2));
 
-				for (size_t i = 0; i < out_size; i += 0x10)
+				for (i = 0; i < out_size; i += 0x10)
 				{
+					unsigned int j;
+
 					fprintf(out_file, "	dc.b	$%.2x", *out_pointer++);
 
-					unsigned int j = 1;
+					j = 1;
 
-					for (; j < MIN(0x10, out_size - i); ++j)
+					for (; j < CC_MIN(0x10, out_size - i); ++j)
 						fprintf(out_file, ",$%.2x", *out_pointer++);
 
 					for (; j < 0x10; ++j)

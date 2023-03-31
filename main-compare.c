@@ -13,7 +13,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,11 +23,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "load-file-to-buffer.h"
 #include "memory-stream.h"
-
-#undef MIN
-#undef MAX
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 static unsigned int ReadByte(void* const user_data)
 {
@@ -43,9 +37,11 @@ static void WriteByte(void* const user_data, const unsigned int byte)
 
 int main(int argc, char **argv)
 {
+	int i;
+
 	int exit_code = EXIT_SUCCESS;
 
-	for (int i = 1; i < argc; ++i)
+	for (i = 1; i < argc; ++i)
 	{
 		unsigned char *in_file_buffer;
 		size_t in_file_size;
@@ -57,12 +53,15 @@ int main(int argc, char **argv)
 		else
 		{
 			ROMemoryStream compressed_buffer;
-			ROMemoryStream_Create(&compressed_buffer, in_file_buffer, in_file_size);
-
 			MemoryStream uncompressed_buffer;
+			KosinskiDecompressCallbacks decompress_callbacks;
+			ROMemoryStream uncompressed_buffer_read;
+			MemoryStream recompressed_buffer;
+			KosinskiCompressCallbacks compress_callbacks;
+
+			ROMemoryStream_Create(&compressed_buffer, in_file_buffer, in_file_size);
 			MemoryStream_Create(&uncompressed_buffer, cc_true);
 
-			KosinskiDecompressCallbacks decompress_callbacks;
 			decompress_callbacks.read_byte_user_data = &compressed_buffer;
 			decompress_callbacks.read_byte = ReadByte;
 			decompress_callbacks.write_byte_user_data = &uncompressed_buffer;
@@ -70,25 +69,21 @@ int main(int argc, char **argv)
 
 			KosinskiDecompress(&decompress_callbacks,
 			#ifdef DEBUG
-				true
+				cc_true
 			#else
-				false
+				cc_false
 			#endif
 			);
 
 			ROMemoryStream_Destroy(&compressed_buffer);
 
 		#ifdef DEBUG
-			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[i], MemoryStream_GetPosition(&uncompressed_buffer));
+			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[i], (unsigned long)MemoryStream_GetPosition(&uncompressed_buffer));
 		#endif
 
-			ROMemoryStream uncompressed_buffer_read;
 			ROMemoryStream_Create(&uncompressed_buffer_read, MemoryStream_GetBuffer(&uncompressed_buffer), MemoryStream_GetPosition(&uncompressed_buffer));
-
-			MemoryStream recompressed_buffer;
 			MemoryStream_Create(&recompressed_buffer, cc_true);
 
-			KosinskiCompressCallbacks compress_callbacks;
 			compress_callbacks.read_byte_user_data = &uncompressed_buffer_read;
 			compress_callbacks.read_byte = ReadByte;
 			compress_callbacks.write_byte_user_data = &recompressed_buffer;
@@ -96,9 +91,9 @@ int main(int argc, char **argv)
 
 			KosinskiCompress(&compress_callbacks,
 			#ifdef DEBUG
-				true
+				cc_true
 			#else
-				false
+				cc_false
 			#endif
 			);
 
@@ -110,7 +105,7 @@ int main(int argc, char **argv)
 				exit_code = EXIT_FAILURE;
 				fputs("FAILURE: The size of the recompressed data does not match the original.\n", stdout);
 			}
-			else if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&recompressed_buffer), MIN(in_file_size, MemoryStream_GetPosition(&recompressed_buffer))))
+			else if (memcmp(in_file_buffer, MemoryStream_GetBuffer(&recompressed_buffer), CC_MIN(in_file_size, MemoryStream_GetPosition(&recompressed_buffer))))
 			{
 				exit_code = EXIT_FAILURE;
 				fputs("FAILURE: The recompressed data does not match the original.\n", stdout);

@@ -13,7 +13,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,17 +57,20 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			unsigned long in_size;
+			const char *out_filename;
+			FILE *out_file;
+
 			fseek(in_file, 0, SEEK_END);
-			const size_t in_size = ftell(in_file);
+			in_size = ftell(in_file);
 			rewind(in_file);
 
 		#ifdef DEBUG
-			fprintf(stderr, "File '%s' with size %zX loaded\n", argv[1], in_size);
+			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], in_size);
 		#endif
 
-			const char *out_filename = (argc > 2) ? argv[2] : "out.kosm";
-
-			FILE *out_file = fopen(out_filename, "wb");
+			out_filename = (argc > 2) ? argv[2] : "out.kosm";
+			out_file = fopen(out_filename, "wb");
 
 			if (out_file == NULL)
 			{
@@ -85,9 +87,9 @@ int main(int argc, char **argv)
 
 				KosinskiCompressModuled(in_size, &callbacks,
 				#ifdef DEBUG
-					true
+					cc_true
 				#else
-					false
+					cc_false
 				#endif
 				);
 

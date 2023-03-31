@@ -13,7 +13,6 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,9 +74,9 @@ int main(int argc, char **argv)
 
 				KosinskiDecompress(&callbacks,
 				#ifdef DEBUG
-					true
+					cc_true
 				#else
-					false
+					cc_false
 				#endif
 				);
 
