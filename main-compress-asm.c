@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 			"\n"
 			"www.github.com/Clownacy/accurate-kosinski\n"
 			"\n"
-			"Usage: kosinski_compress_asm [in_file] [out_file](optional)\n"
+			"Usage: kosinski-compress-asm [in_file] [out_file](optional)\n"
 			, stdout
 		);
 	}

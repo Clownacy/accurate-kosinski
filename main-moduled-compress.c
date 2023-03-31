@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 			"\n"
 			"www.github.com/Clownacy/accurate-kosinski\n"
 			"\n"
-			"Usage: kosinskim_compress [in_file] [out_file](optional)\n"
+			"Usage: kosinskim-compress [in_file] [out_file](optional)\n"
 			, stdout
 		);
 	}
