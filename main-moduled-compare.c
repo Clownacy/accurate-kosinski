@@ -35,7 +35,7 @@ static void WriteByte(void* const user_data, const unsigned int byte)
 	MemoryStream_WriteByte((MemoryStream*)user_data, byte);
 }
 
-int main(int argc, char **argv)
+int main(const int argc, char** const argv)
 {
 	int i;
 

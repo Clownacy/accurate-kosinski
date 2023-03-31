@@ -35,7 +35,7 @@ static void WriteByte(void* const user_data, const unsigned int byte)
 	MemoryStream_WriteByte((MemoryStream*)user_data, byte);
 }
 
-int main(int argc, char **argv)
+int main(const int argc, char** const argv)
 {
 	int exit_code = EXIT_SUCCESS;
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		FILE *in_file = fopen(argv[1], "rb");
+		FILE* const in_file = fopen(argv[1], "rb");
 
 		if (in_file == NULL)
 		{

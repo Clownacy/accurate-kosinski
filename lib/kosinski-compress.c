@@ -56,7 +56,7 @@ static unsigned int descriptor_bits_remaining;
    common technique back then. */
 static unsigned char ring_buffer[SLIDING_WINDOW_SIZE + MAX_MATCH_LENGTH - 1];
 
-static void FlushData(const KosinskiCompressCallbacks *callbacks)
+static void FlushData(const KosinskiCompressCallbacks* const callbacks)
 {
 	size_t i;
 
@@ -74,12 +74,12 @@ static void FlushData(const KosinskiCompressCallbacks *callbacks)
 	output_position += TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index;
 }
 
-static void PutMatchByte(unsigned char byte)
+static void PutMatchByte(const unsigned char byte)
 {
 	match_buffer[match_buffer_index++] = byte;
 }
 
-static void PutDescriptorBit(cc_bool bit, const KosinskiCompressCallbacks *callbacks)
+static void PutDescriptorBit(const cc_bool bit, const KosinskiCompressCallbacks* const callbacks)
 {
 	descriptor >>= 1;
 
@@ -100,7 +100,7 @@ static unsigned long GetOutputPosition(void)
 	return (unsigned long)(output_position + TOTAL_DESCRIPTOR_BITS / 8 + match_buffer_index);
 }
 
-void KosinskiCompress(const KosinskiCompressCallbacks *callbacks, cc_bool print_debug_messages)
+void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc_bool print_debug_messages)
 {
 	size_t read_index = 0;
 	size_t file_index = 0;

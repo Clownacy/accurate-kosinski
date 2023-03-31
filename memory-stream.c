@@ -22,7 +22,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "clowncommon/clowncommon.h"
 
-static cc_bool ResizeIfNeeded(MemoryStream *memory_stream, size_t minimum_needed_size)
+static cc_bool ResizeIfNeeded(MemoryStream* const memory_stream, const size_t minimum_needed_size)
 {
 	if (minimum_needed_size > memory_stream->size)
 	{
@@ -48,7 +48,7 @@ static cc_bool ResizeIfNeeded(MemoryStream *memory_stream, size_t minimum_needed
 	return cc_true;
 }
 
-void MemoryStream_Create(MemoryStream *memory_stream, cc_bool free_buffer_when_destroyed)
+void MemoryStream_Create(MemoryStream* const memory_stream, const cc_bool free_buffer_when_destroyed)
 {
 	memory_stream->buffer = NULL;
 	memory_stream->position = 0;
@@ -57,13 +57,13 @@ void MemoryStream_Create(MemoryStream *memory_stream, cc_bool free_buffer_when_d
 	memory_stream->free_buffer_when_destroyed = free_buffer_when_destroyed;
 }
 
-void MemoryStream_Destroy(MemoryStream *memory_stream)
+void MemoryStream_Destroy(MemoryStream* const memory_stream)
 {
 	if (memory_stream->free_buffer_when_destroyed)
 		free(memory_stream->buffer);
 }
 
-cc_bool MemoryStream_WriteByte(MemoryStream *memory_stream, unsigned int byte)
+cc_bool MemoryStream_WriteByte(MemoryStream* const memory_stream, const unsigned int byte)
 {
 	assert(byte < 0x100);
 
@@ -75,7 +75,7 @@ cc_bool MemoryStream_WriteByte(MemoryStream *memory_stream, unsigned int byte)
 	return cc_true;
 }
 
-cc_bool MemoryStream_Write(MemoryStream *memory_stream, const void *data, size_t size, size_t count)
+cc_bool MemoryStream_Write(MemoryStream* const memory_stream, const void* const data, const size_t size, const size_t count)
 {
 	if (!ResizeIfNeeded(memory_stream, memory_stream->position + size * count))
 		return cc_false;
@@ -86,30 +86,28 @@ cc_bool MemoryStream_Write(MemoryStream *memory_stream, const void *data, size_t
 	return cc_true;
 }
 
-size_t MemoryStream_Read(MemoryStream *memory_stream, void *output, size_t size, size_t count)
+size_t MemoryStream_Read(MemoryStream* const memory_stream, void* const output, const size_t size, const size_t count)
 {
 	const size_t elements_remaining = (memory_stream->end - memory_stream->position) / size;
+	const size_t elements_read = CC_MIN(count, elements_remaining);
 
-	if (count > elements_remaining)
-		count = elements_remaining;
+	memcpy(output, &memory_stream->buffer[memory_stream->position], size * elements_read);
+	memory_stream->position += size * elements_read;
 
-	memcpy(output, &memory_stream->buffer[memory_stream->position], size * count);
-	memory_stream->position += size * count;
-
-	return count;
+	return elements_read;
 }
 
-unsigned char* MemoryStream_GetBuffer(MemoryStream *memory_stream)
+unsigned char* MemoryStream_GetBuffer(MemoryStream* const memory_stream)
 {
 	return memory_stream->buffer;
 }
 
-size_t MemoryStream_GetPosition(MemoryStream *memory_stream)
+size_t MemoryStream_GetPosition(MemoryStream* const memory_stream)
 {
 	return memory_stream->position;
 }
 
-cc_bool MemoryStream_SetPosition(MemoryStream *memory_stream, ptrdiff_t offset, enum MemoryStream_Origin origin)
+cc_bool MemoryStream_SetPosition(MemoryStream* const memory_stream, const ptrdiff_t offset, const enum MemoryStream_Origin origin)
 {
 	switch (origin)
 	{
@@ -137,7 +135,7 @@ void MemoryStream_Rewind(MemoryStream *memory_stream)
 	memory_stream->position = 0;
 }
 
-void ROMemoryStream_Create(ROMemoryStream *ro_memory_stream, const void *data, size_t size)
+void ROMemoryStream_Create(ROMemoryStream* const ro_memory_stream, const void* const data, const size_t size)
 {
 	ro_memory_stream->memory_stream.buffer = (unsigned char*)data;
 	ro_memory_stream->memory_stream.position = 0;
@@ -146,27 +144,27 @@ void ROMemoryStream_Create(ROMemoryStream *ro_memory_stream, const void *data, s
 	ro_memory_stream->memory_stream.free_buffer_when_destroyed = cc_false;
 }
 
-void ROMemoryStream_Destroy(ROMemoryStream *ro_memory_stream)
+void ROMemoryStream_Destroy(ROMemoryStream* const ro_memory_stream)
 {
 	MemoryStream_Destroy(&ro_memory_stream->memory_stream);
 }
 
-size_t ROMemoryStream_Read(ROMemoryStream *ro_memory_stream, void *output, size_t size, size_t count)
+size_t ROMemoryStream_Read(ROMemoryStream* const ro_memory_stream, void* const output, const size_t size, const size_t count)
 {
 	return MemoryStream_Read(&ro_memory_stream->memory_stream, output, size, count);
 }
 
-size_t ROMemoryStream_GetPosition(ROMemoryStream *ro_memory_stream)
+size_t ROMemoryStream_GetPosition(ROMemoryStream* const ro_memory_stream)
 {
 	return MemoryStream_GetPosition(&ro_memory_stream->memory_stream);
 }
 
-cc_bool ROMemoryStream_SetPosition(ROMemoryStream *ro_memory_stream, ptrdiff_t offset, enum MemoryStream_Origin origin)
+cc_bool ROMemoryStream_SetPosition(ROMemoryStream* const ro_memory_stream, const ptrdiff_t offset, const enum MemoryStream_Origin origin)
 {
 	return MemoryStream_SetPosition(&ro_memory_stream->memory_stream, offset, origin);
 }
 
-void ROMemoryStream_Rewind(ROMemoryStream *ro_memory_stream)
+void ROMemoryStream_Rewind(ROMemoryStream* const ro_memory_stream)
 {
 	MemoryStream_Rewind(&ro_memory_stream->memory_stream);
 }

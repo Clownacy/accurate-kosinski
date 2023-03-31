@@ -38,12 +38,12 @@ static unsigned int ReadByte(void* const user_data)
 	return callbacks_and_counter->callbacks->read_byte((void*)callbacks_and_counter->callbacks->read_byte_user_data);
 }
 
-void KosinskiCompressModuled(size_t file_size, const KosinskiCompressCallbacks *callbacks, cc_bool print_debug_messages)
+void KosinskiCompressModuled(const size_t file_size, const KosinskiCompressCallbacks* const callbacks, const cc_bool print_debug_messages)
 {
 	size_t file_index;
 
 	if (file_size > 0xFFFF || file_size == 0xA000) /* For some reason, 0xA000 is forced to 0x8000 in Sonic 3 & Knuckles' `Process_Kos_Module_Queue_Init` function. */
-		return;	/* Cannot fit size of file in header - give up // TODO: Error code? */
+		return;	/* Cannot fit size of file in header - give up */ /* TODO: Error code? */
 
 	callbacks->write_byte((void*)callbacks->write_byte_user_data, file_size >> 8);
 	callbacks->write_byte((void*)callbacks->write_byte_user_data, file_size & 0xFF);

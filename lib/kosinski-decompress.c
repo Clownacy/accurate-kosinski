@@ -64,7 +64,7 @@ static cc_bool PopDescriptor(const KosinskiDecompressCallbacks* const callbacks)
 	return result;
 }
 
-void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, cc_bool print_debug_information)
+void KosinskiDecompress(const KosinskiDecompressCallbacks* const callbacks, const cc_bool print_debug_information)
 {
 	read_position = 0;
 	write_position = 0;

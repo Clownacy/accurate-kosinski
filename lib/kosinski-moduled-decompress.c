@@ -35,7 +35,7 @@ static unsigned int ReadByte(void* const user_data)
 	return callbacks_and_counter->callbacks->read_byte((void*)callbacks_and_counter->callbacks->read_byte_user_data);
 }
 
-void KosinskiDecompressModuled(const KosinskiDecompressCallbacks *callbacks, cc_bool print_debug_messages)
+void KosinskiDecompressModuled(const KosinskiDecompressCallbacks* const callbacks, const cc_bool print_debug_messages)
 {
 	unsigned int i;
 

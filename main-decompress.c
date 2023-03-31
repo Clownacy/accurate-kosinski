@@ -29,7 +29,7 @@ static void WriteByte(void* const user_data, const unsigned int byte)
 	fputc(byte, (FILE*)user_data);
 }
 
-int main(int argc, char **argv)
+int main(const int argc, char** const argv)
 {
 	int exit_code = EXIT_SUCCESS;
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		FILE *in_file = fopen(argv[1], "rb");
+		FILE* const in_file = fopen(argv[1], "rb");
 
 		if (in_file == NULL)
 		{
@@ -55,9 +55,9 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			const char *out_filename = (argc > 2) ? argv[2] : "out.unc";
+			const char* const out_filename = (argc > 2) ? argv[2] : "out.unc";
 
-			FILE *out_file = fopen(out_filename, "wb");
+			FILE* const out_file = fopen(out_filename, "wb");
 
 			if (out_file == NULL)
 			{
