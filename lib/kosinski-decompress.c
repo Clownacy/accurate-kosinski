@@ -96,8 +96,8 @@ void KosinskiDecompress(const KosinskiDecompressCallbacks* const callbacks, cons
 				const unsigned char low_byte = ReadByte(callbacks);
 				const unsigned char high_byte = ReadByte(callbacks);
 
-				distance = 0xE000 | ((high_byte & 0xF8) << 5) | low_byte;
-				distance = (distance ^ 0xFFFF) + 1; /* Convert from negative two's-complement to positive */
+				distance = ((high_byte & 0xF8) << 5) | low_byte;
+				distance = (distance ^ 0x1FFF) + 1; /* Convert from negative two's-complement to positive */
 				count = high_byte & 7;
 
 				if (count != 0)
