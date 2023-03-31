@@ -18,11 +18,12 @@ set_target_properties(memory-stream PROPERTIES
 )
 
 add_library(load-file-to-buffer STATIC
+	"clowncommon/clowncommon.h"
 	"load-file-to-buffer.c"
 	"load-file-to-buffer.h"
 )
 set_target_properties(load-file-to-buffer PROPERTIES
-	C_STANDARD 99
+	C_STANDARD 90
 	C_EXTENSIONS OFF
 )
 

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -16,9 +16,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef LOAD_FILE_TO_BUFFER_H
 #define LOAD_FILE_TO_BUFFER_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
-bool LoadFileToBuffer(const char *file_name, unsigned char **file_buffer, size_t *file_size);
+#include "clowncommon/clowncommon.h"
+
+cc_bool LoadFileToBuffer(const char *file_name, unsigned char **file_buffer, size_t *file_size);
 
 #endif /* LOAD_FILE_TO_BUFFER_H */

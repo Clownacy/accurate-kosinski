@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018-2021 Clownacy
+Copyright (c) 2018-2023 Clownacy
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -15,24 +15,26 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "load-file-to-buffer.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-bool LoadFileToBuffer(const char *file_name, unsigned char **p_file_buffer, size_t *p_file_size)
+cc_bool LoadFileToBuffer(const char* const file_name, unsigned char** const p_file_buffer, size_t* const p_file_size)
 {
-	bool success = false;
+	cc_bool success = cc_false;
 
-	FILE *file = fopen(file_name, "rb");
+	FILE* const file = fopen(file_name, "rb");
 
 	if (file != NULL)
 	{
+		size_t file_size;
+		unsigned char *file_buffer;
+
 		fseek(file, 0, SEEK_END);
-		const size_t file_size = ftell(file);
+		file_size = ftell(file);
 		rewind(file);
 
-		unsigned char *file_buffer = (unsigned char*)malloc(file_size);
+		file_buffer = (unsigned char*)malloc(file_size);
 
 		if (file_buffer != NULL)
 		{
@@ -44,7 +46,7 @@ bool LoadFileToBuffer(const char *file_name, unsigned char **p_file_buffer, size
 			if (p_file_size != NULL)
 				*p_file_size = file_size;
 
-			success = true;
+			success = cc_true;
 		}
 
 		fclose(file);
