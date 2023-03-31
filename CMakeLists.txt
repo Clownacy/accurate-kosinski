@@ -45,9 +45,10 @@ add_library(kosinski-decompressor STATIC
 	"lib/kosinski-decompress.h"
 )
 set_target_properties(kosinski-decompressor PROPERTIES
-	C_STANDARD 99
+	C_STANDARD 90
 	C_EXTENSIONS OFF
 )
+target_link_libraries(kosinski-decompressor PUBLIC accurate-kosinski-clowncommon)
 
 add_library(kosinskim-compressor STATIC
 	"lib/kosinski-moduled-compress.c"

@@ -16,8 +16,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef KOSINSKI_DECOMPRESS_H
 #define KOSINSKI_DECOMPRESS_H
 
-#include <stdbool.h>
 #include <stddef.h>
+
+#include "clowncommon/clowncommon.h"
 
 typedef struct KosinskiDecompressCallbacks
 {
@@ -27,6 +28,6 @@ typedef struct KosinskiDecompressCallbacks
 	void (*write_byte)(void *user_data, unsigned int byte);
 } KosinskiDecompressCallbacks;
 
-void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print_debug_information);
+void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, cc_bool print_debug_information);
 
 #endif /* KOSINSKI_DECOMPRESS_H */

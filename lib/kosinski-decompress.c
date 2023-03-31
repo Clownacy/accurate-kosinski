@@ -15,7 +15,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "kosinski-decompress.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,17 +43,18 @@ static void WriteByte(const unsigned int byte, const KosinskiDecompressCallbacks
 
 static void GetDescriptor(const KosinskiDecompressCallbacks* const callbacks)
 {
-	descriptor_bits_remaining = 16;
-
 	const unsigned int low_byte = ReadByte(callbacks);
 	const unsigned int high_byte = ReadByte(callbacks);
 
 	descriptor = (high_byte << 8) | low_byte;
+
+	descriptor_bits_remaining = 16;
+
 }
 
-static bool PopDescriptor(const KosinskiDecompressCallbacks* const callbacks)
+static cc_bool PopDescriptor(const KosinskiDecompressCallbacks* const callbacks)
 {
-	const bool result = (descriptor & 1) != 0;
+	const cc_bool result = (descriptor & 1) != 0;
 
 	descriptor >>= 1;
 
@@ -64,7 +64,7 @@ static bool PopDescriptor(const KosinskiDecompressCallbacks* const callbacks)
 	return result;
 }
 
-void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print_debug_information)
+void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, cc_bool print_debug_information)
 {
 	read_position = 0;
 	write_position = 0;
@@ -80,7 +80,7 @@ void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print
 			const unsigned char byte = ReadByte(callbacks);
 
 			if (print_debug_information)
-				fprintf(stderr, "%zX - Literal match: At %zX, value %X\n", position, write_position, byte);
+				fprintf(stderr, "%lX - Literal match: At %lX, value %X\n", (unsigned long)position, (unsigned long)write_position, byte);
 
 			WriteByte(byte, callbacks);
 		}
@@ -97,7 +97,7 @@ void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print
 				const unsigned char high_byte = ReadByte(callbacks);
 
 				distance = 0xE000 | ((high_byte & 0xF8) << 5) | low_byte;
-				distance = (distance ^ 0xFFFF) + 1; // Convert from negative two's-complement to positive
+				distance = (distance ^ 0xFFFF) + 1; /* Convert from negative two's-complement to positive */
 				count = high_byte & 7;
 
 				if (count != 0)
@@ -105,7 +105,7 @@ void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print
 					count += 2;
 
 					if (print_debug_information)
-						fprintf(stderr, "%zX - Full match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
+						fprintf(stderr, "%lX - Full match: At %lX, src %lX, len %lX\n", (unsigned long)position, (unsigned long)write_position, (unsigned long)(write_position - distance), (unsigned long)count);
 				}
 				else
 				{
@@ -114,21 +114,21 @@ void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print
 					if (count == 1)
 					{
 						if (print_debug_information)
-							fprintf(stderr, "%zX - Terminator: At %zX, src %zX\n", position, write_position, write_position - distance);
+							fprintf(stderr, "%lX - Terminator: At %lX, src %lX\n", (unsigned long)position, (unsigned long)write_position, (unsigned long)(write_position - distance));
 
 						break;
 					}
 					else if (count == 2)
 					{
 						if (print_debug_information)
-							fprintf(stderr, "%zX - 0xA000 boundary flag: At %zX, src %zX\n", position, write_position, write_position - distance);
+							fprintf(stderr, "%lX - 0xA000 boundary flag: At %lX, src %lX\n", (unsigned long)position, (unsigned long)write_position, (unsigned long)(write_position - distance));
 
 						continue;
 					}
 					else
 					{
 						if (print_debug_information)
-							fprintf(stderr, "%zX - Extended full match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
+							fprintf(stderr, "%lX - Extended full match: At %lX, src %lX, len %lX\n", (unsigned long)position, (unsigned long)write_position, (unsigned long)(write_position - distance), (unsigned long)count);
 					}
 				}
 			}
@@ -141,15 +141,13 @@ void KosinskiDecompress(const KosinskiDecompressCallbacks *callbacks, bool print
 				if (PopDescriptor(callbacks))
 					count += 1;
 
-				const size_t position = read_position;
-
-				distance = (ReadByte(callbacks) ^ 0xFF) + 1; // Convert from negative two's-complement to positive
+				distance = (ReadByte(callbacks) ^ 0xFF) + 1; /* Convert from negative two's-complement to positive */
 
 				if (print_debug_information)
-					fprintf(stderr, "%zX - Inline match: At %zX, src %zX, len %zX\n", position, write_position, write_position - distance, count);
+					fprintf(stderr, "%lX - Inline match: At %lX, src %lX, len %lX\n", (unsigned long)(read_position - 1), (unsigned long)write_position, (unsigned long)(write_position - distance), (unsigned long)count);
 			}
 
-			for (size_t i = 0; i < count; ++i)
+			while (count-- != 0)
 				WriteByte(backsearch_buffer[(write_position - distance) % SLIDING_WINDOW_SIZE], callbacks);
 		}
 	}
