@@ -83,8 +83,7 @@ static void PutDescriptorBit(const cc_bool bit, const KosinskiCompressCallbacks*
 {
 	descriptor >>= 1;
 
-	if (bit)
-		descriptor |= 1u << (TOTAL_DESCRIPTOR_BITS - 1);
+	descriptor |= (unsigned int)bit << (TOTAL_DESCRIPTOR_BITS - 1);
 
 	if (--descriptor_bits_remaining == 0)
 	{
@@ -102,8 +101,8 @@ static unsigned long GetOutputPosition(void)
 
 void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc_bool print_debug_messages)
 {
+	size_t write_index = 0;
 	size_t read_index = 0;
-	size_t file_index = 0;
 	size_t dummy_counter = 0;
 
 	output_position = 0;
@@ -111,25 +110,25 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 	descriptor_bits_remaining = TOTAL_DESCRIPTOR_BITS;
 
 	/* Initialise the ring buffer with data from the file */
-	for (; read_index < MAX_MATCH_LENGTH; ++read_index)
+	for (; write_index < MAX_MATCH_LENGTH; ++write_index)
 	{
 		const unsigned int byte = callbacks->read_byte((void*)callbacks->read_byte_user_data);
 
 		if (byte == (unsigned int)-1)
 			break;
 
-		ring_buffer[read_index] = byte;
+		ring_buffer[write_index] = byte;
 	}
 
 	/* Fill the remainder of the ring buffer with zero. We know that
 	   the original Kosinski compressor did this because of Mistake 6. */
-	memset(&ring_buffer[read_index], 0, sizeof(ring_buffer) - read_index);
+	memset(&ring_buffer[write_index], 0, sizeof(ring_buffer) - write_index);
 
-	while (file_index != read_index)
+	while (read_index != write_index)
 	{
 		size_t i;
 
-		const size_t max_match_distance = CC_MIN(file_index, MAX_MATCH_DISTANCE);
+		const size_t max_match_distance = CC_MIN(read_index, MAX_MATCH_DISTANCE);
 
 		/* Search backwards for previous occurances of the current data */
 		size_t longest_match_index = 0;
@@ -145,8 +144,8 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			   because the chosen data just so happened to be followed by the same pattern of bytes that
 			   the buggy search read from the ring buffer, while the nearby data did not. */
 			size_t match_length = 0;
-			const unsigned char *current_data = &ring_buffer[file_index % SLIDING_WINDOW_SIZE];
-			const unsigned char *previous_data = &ring_buffer[(file_index - backsearch_index) % SLIDING_WINDOW_SIZE];
+			const unsigned char *current_data = &ring_buffer[read_index % SLIDING_WINDOW_SIZE];
+			const unsigned char *previous_data = &ring_buffer[(read_index - backsearch_index) % SLIDING_WINDOW_SIZE];
 			while (match_length < MAX_MATCH_LENGTH && *current_data++ == *previous_data++)
 				++match_length;
 
@@ -158,7 +157,7 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 		}
 
 		/* If the match is longer than the remainder of the file, reduce it to the proper size. See Mistake 6 for more info. */
-		longest_match_length = CC_MIN(longest_match_length, read_index - file_index);
+		longest_match_length = CC_MIN(longest_match_length, write_index - read_index);
 
 		/* Mistake 5: This is completely pointless.
 		   For some reason, the original compressor would insert a dummy match
@@ -172,7 +171,7 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			dummy_counter %= 0xA000;
 
 			if (print_debug_messages)
-				fprintf(stderr, "%lX - 0xA000 boundary flag: %lX\n", GetOutputPosition(), (unsigned long)file_index);
+				fprintf(stderr, "%lX - 0xA000 boundary flag: %lX\n", GetOutputPosition(), (unsigned long)read_index);
 
 			/* 0xA000 boundary match */
 			PutDescriptorBit(cc_false, callbacks);
@@ -189,7 +188,7 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			const size_t length = longest_match_length - 2;
 
 			if (print_debug_messages)
-				fprintf(stderr, "%lX - Inline dictionary match found: %lX, %lX, %lX\n", GetOutputPosition(), (unsigned long)file_index, (unsigned long)(file_index - longest_match_index), (unsigned long)longest_match_length);
+				fprintf(stderr, "%lX - Inline dictionary match found: %lX, %lX, %lX\n", GetOutputPosition(), (unsigned long)read_index, (unsigned long)(read_index - longest_match_index), (unsigned long)longest_match_length);
 
 			PutDescriptorBit(cc_false, callbacks);
 			PutDescriptorBit(cc_false, callbacks);
@@ -203,7 +202,7 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			const size_t distance = -longest_match_index;
 
 			if (print_debug_messages)
-				fprintf(stderr, "%lX - Full match found: %lX, %lX, %lX\n", GetOutputPosition(), (unsigned long)file_index, (unsigned long)(file_index - longest_match_index), (unsigned long)longest_match_length);
+				fprintf(stderr, "%lX - Full match found: %lX, %lX, %lX\n", GetOutputPosition(), (unsigned long)read_index, (unsigned long)(read_index - longest_match_index), (unsigned long)longest_match_length);
 
 			PutDescriptorBit(cc_false, callbacks);
 			PutDescriptorBit(cc_true, callbacks);
@@ -216,7 +215,7 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			const size_t distance = -longest_match_index;
 
 			if (print_debug_messages)
-				fprintf(stderr, "%lX - Extended full match found: %lX, %lX, %lX\n", GetOutputPosition(), (unsigned long)file_index, (unsigned long)(file_index - longest_match_index), (unsigned long)longest_match_length);
+				fprintf(stderr, "%lX - Extended full match found: %lX, %lX, %lX\n", GetOutputPosition(), (unsigned long)read_index, (unsigned long)(read_index - longest_match_index), (unsigned long)longest_match_length);
 
 			PutDescriptorBit(cc_false, callbacks);
 			PutDescriptorBit(cc_true, callbacks);
@@ -227,13 +226,13 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 		else
 		{
 			if (print_debug_messages)
-				fprintf(stderr, "%lX - Literal match found: %X at %lX\n", GetOutputPosition(), ring_buffer[file_index % SLIDING_WINDOW_SIZE], (unsigned long)file_index);
+				fprintf(stderr, "%lX - Literal match found: %X at %lX\n", GetOutputPosition(), ring_buffer[read_index % SLIDING_WINDOW_SIZE], (unsigned long)read_index);
 
 			/* Match was too small to encode; do a literal match instead */
 			longest_match_length = 1;
 
 			PutDescriptorBit(cc_true, callbacks);
-			PutMatchByte(ring_buffer[file_index % SLIDING_WINDOW_SIZE]);
+			PutMatchByte(ring_buffer[read_index % SLIDING_WINDOW_SIZE]);
 		}
 
 		/* Update the ring buffer with bytes from the file */
@@ -247,7 +246,7 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			}
 			else
 			{
-				const size_t ring_buffer_index = read_index++ % SLIDING_WINDOW_SIZE;
+				const size_t ring_buffer_index = write_index++ % SLIDING_WINDOW_SIZE;
 
 				ring_buffer[ring_buffer_index] = byte;
 
@@ -258,12 +257,12 @@ void KosinskiCompress(const KosinskiCompressCallbacks* const callbacks, const cc
 			}
 		}
 
-		file_index += longest_match_length;
+		read_index += longest_match_length;
 		dummy_counter += longest_match_length;
 	}
 
 	if (print_debug_messages)
-		fprintf(stderr, "%lX - Terminator: %lX\n", GetOutputPosition(), (unsigned long)file_index);
+		fprintf(stderr, "%lX - Terminator: %lX\n", GetOutputPosition(), (unsigned long)read_index);
 
 	/* Terminator match */
 	PutDescriptorBit(cc_false, callbacks);
