@@ -17,6 +17,13 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <fcntl.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#endif
+
 #include "lib/kosinski-compress.h"
 
 static unsigned int ReadByte(void* const user_data)
@@ -65,6 +72,11 @@ int main(const int argc, char** const argv)
 			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
 	}
+
+#ifdef _WIN32
+	setmode(fileno(in_file), O_BINARY);
+	setmode(fileno(out_file), O_BINARY);
+#endif
 
 	KosinskiCompressCallbacks callbacks;
 	callbacks.read_byte_user_data = in_file;
