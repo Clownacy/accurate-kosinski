@@ -34,71 +34,57 @@ static void WriteByte(void* const user_data, const unsigned int byte)
 int main(const int argc, char** const argv)
 {
 	int exit_code = EXIT_SUCCESS;
+	FILE *in_file = stdin;
+	FILE *out_file = stdout;
 
-	if (argc < 2)
-	{
-		fputs(
-			"This tool compresses a supplied file in the Kosinski format. It tries to produce files accurate to Sega's original compressor.\n"
-			"\n"
-			"www.github.com/Clownacy/accurate-kosinski\n"
-			"\n"
-			"Usage: kosinski-compress [in_file] [out_file](optional)\n"
-			, stdout
-		);
+	if (argc > 2) {
+	#ifdef DEBUG
+		unsigned long file_size;
+		fseek(in_file, 0, SEEK_END);
+		file_size = ftell(in_file);
+		rewind(in_file);
+
+		fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
+	#endif
+
+		out_file = fopen(argv[2], "wb");
+
+		if (out_file == NULL)
+		{
+			exit_code = EXIT_FAILURE;
+			fprintf(stderr, "Could not open '%s'\n", argv[2]);
+		}
 	}
-	else
-	{
-		FILE* const in_file = fopen(argv[1], "rb");
+
+	if (argc > 1) {
+		in_file = fopen(argv[1], "rb");
 
 		if (in_file == NULL)
 		{
 			exit_code = EXIT_FAILURE;
 			fprintf(stderr, "Could not open '%s'\n", argv[1]);
 		}
-		else
-		{
-			const char *out_filename;
-			FILE *out_file;
-
-		#ifdef DEBUG
-			unsigned long file_size;
-			fseek(in_file, 0, SEEK_END);
-			file_size = ftell(in_file);
-			rewind(in_file);
-
-			fprintf(stderr, "File '%s' with size %lX loaded\n", argv[1], file_size);
-		#endif
-
-			out_filename = (argc > 2) ? argv[2] : "out.kos";
-			out_file = fopen(out_filename, "wb");
-
-			if (out_file == NULL)
-			{
-				exit_code = EXIT_FAILURE;
-				fprintf(stderr, "Could not open '%s'\n", out_filename);
-			}
-			else
-			{
-				KosinskiCompressCallbacks callbacks;
-				callbacks.read_byte_user_data = in_file;
-				callbacks.read_byte = ReadByte;
-				callbacks.write_byte_user_data = out_file;
-				callbacks.write_byte = WriteByte;
-
-				KosinskiCompress(&callbacks,
-				#ifdef DEBUG
-					cc_true
-				#else
-					cc_false
-				#endif
-				);
-
-				fclose(out_file);
-			}
-
-			fclose(in_file);
-		}
 	}
+
+	KosinskiCompressCallbacks callbacks;
+	callbacks.read_byte_user_data = in_file;
+	callbacks.read_byte = ReadByte;
+	callbacks.write_byte_user_data = out_file;
+	callbacks.write_byte = WriteByte;
+
+	KosinskiCompress(&callbacks,
+	#ifdef DEBUG
+		cc_true
+	#else
+		cc_false
+	#endif
+	);
+
+	if (argc > 2)
+		fclose(out_file);
+	
+	if (argc > 1)
+		fclose(in_file);
 
 	return exit_code;
 }
